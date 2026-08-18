@@ -1,0 +1,6 @@
+.env
+.env.local
+node_modules/
+runtime/state/
+runtime/logs/
+*.log
