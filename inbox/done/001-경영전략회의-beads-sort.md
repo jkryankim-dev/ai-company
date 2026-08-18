@@ -1,3 +1,6 @@
+# 처리 완료 (2026-08-18)
+
+## 지시 원문
 # 경영전략회의 소집 — Beads Sort 성공 전략
 
 대표 지시. 부서장 전원이 참여하는 전략회의를 소집한다.
@@ -22,3 +25,7 @@
 3. 대표 승인이 필요한 항목은 별도 표기.
 
 이 결과는 sprint-01.md 와 함께 이번 2주의 실행 기준이 된다.
+
+## 실패
+종료코드 1: --dangerously-skip-permissions cannot be used with root/sudo privileges for security reasons
+
