@@ -79,10 +79,62 @@ gh 가 없거나 인증이 안 되어 있으면 이슈를 만들지 말고 그 �
     return;
   }
 
-  // 명령어가 아니면 한실장에게
+  // 명령어가 아니면 한실장에게. 위임하면 실제로 그 직원이 일한다.
+  const roster = staff.filter(x => x.id !== 'chief_of_staff')
+    .map(x => `${x.id} = ${x.name} (${x.title})`).join('\n');
+
   const r = await ask(boss, systemFor(boss),
-    `대표가 말했다:\n\n"${t}"\n\n비서실장으로서 답하라. 실무를 직접 하지 말고, 필요하면 어느 직원에게 무엇을 시킬지 제안하라. 10줄 이내.`);
-  await say(WATCH, boss, r.ok ? r.text : `응답 실패: ${r.error}`);
+    `대표가 말했다:\n\n"${t}"\n\n비서실장으로서 답하라. 답하기 전에 관련 파일을 읽어 사실을 확인하라 (사규 12조).
+실무를 직접 하지 마라. 10줄 이내로 답하라.
+
+# 직원 명단
+${roster}
+
+# 위임 방법 (중요)
+실무가 필요하면 답변 **맨 끝에** 아래 블록을 붙여라. 이 블록을 붙이면 해당 직원이 **실제로 즉시 일한다.**
+말로만 "전달했다"고 쓰면 아무 일도 일어나지 않는다. 반드시 블록을 써라.
+
+[위임]
+pm: (김기획이 할 일을 구체적으로. 완료 조건 포함)
+marketing: (서카피가 할 일)
+[/위임]
+
+위임할 것이 없으면 블록을 생략하라. 존재하지 않는 id 는 쓰지 마라.`);
+
+  if (!r.ok) return say(WATCH, boss, `응답 실패: ${r.error}`);
+
+  // 위임 블록 분리
+  const m = r.text.match(/\[위임\]([\s\S]*?)\[\/위임\]/);
+  const visible = r.text.replace(/\[위임\][\s\S]*?\[\/위임\]/, '').trim();
+  await say(WATCH, boss, visible || '(내용 없음)');
+
+  if (!m) return;
+
+  const orders = m[1].split('\n').map(line => {
+    const i = line.indexOf(':');
+    if (i < 0) return null;
+    const id = line.slice(0, i).trim().replace(/^[-*\s]+/, '');
+    const task = line.slice(i + 1).trim();
+    const who = staff.find(x => x.id === id);
+    return who && task ? { who, task } : null;
+  }).filter(Boolean);
+
+  if (!orders.length) return;
+
+  await say(WATCH, boss, `위임: ${orders.map(o => o.who.name).join(', ')} — 착수시켰습니다.`);
+  log(`위임 ${orders.length}건: ${orders.map(o => o.who.id).join(', ')}`);
+
+  await Promise.all(orders.map(async ({ who, task }) => {
+    const res = await ask(who, systemFor(who),
+      `비서실장이 대표의 지시를 너에게 위임했다.\n\n# 대표의 원래 말\n"${t}"\n\n# 너에게 맡겨진 일\n${task}\n\n답하기 전에 관련 파일을 직접 읽어라 (사규 12조). 기억으로 수치를 쓰지 마라.\n실제로 할 수 있는 일은 실제로 하라. 결과와 증거를 함께 보고하라.`);
+    const ch = (Array.isArray(who.channels) && who.channels[0]) || '전사공지';
+    if (res.ok) {
+      await say(ch, who, res.text);
+      await say(WATCH, who, `#${ch} 에 결과를 올렸습니다.`);
+    } else {
+      await say(WATCH, who, `처리 실패: ${res.error}`);
+    }
+  }));
 }
 
 // --- 폴링 루프 ---
