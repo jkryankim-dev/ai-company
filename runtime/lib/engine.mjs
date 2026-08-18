@@ -12,16 +12,34 @@ const APP_DIR = env.APP_REPO || '';
 
 function runClaudeCode(system, prompt, opt) {
   const { model, forZai, cwd = p(), addDirs = [], timeoutMs = 600000, maxTurns = 40 } = opt;
-  const args = ['-p', '--output-format', 'text', '--dangerously-skip-permissions', '--max-turns', String(maxTurns)];
+
+  // --- 격리 ---
+  // 직원에게는 파일과 셸만 준다. 대표 PC 에 연결된 MCP 커넥터는 절대 물려주지 않는다.
+  //   --strict-mcp-config + 빈 설정 파일 → 사용자/프로젝트 MCP 전부 무시
+  //   --tools                            → 내장 도구도 지정한 것만
+  //   CLAUDE_CONFIG_DIR                  → 대표의 개인 설정·스킬·플러그인 격리
+  const args = [
+    '-p', '--output-format', 'text',
+    '--dangerously-skip-permissions',
+    '--strict-mcp-config',
+    '--mcp-config', `"${p('runtime', 'empty-mcp.json')}"`,
+    '--tools', 'Read,Write,Edit,Glob,Grep,Bash',
+    '--max-turns', String(maxTurns),
+  ];
+  if (forZai) args.push('--bare');           // bare 는 OAuth 불가 → 실무진 전용
   if (model) args.push('--model', model);
-  for (const d of addDirs) if (d) args.push('--add-dir', d);
+  for (const d of addDirs) if (d) args.push('--add-dir', `"${d}"`);
 
   const e = { ...process.env };
-  delete e.ANTHROPIC_API_KEY;                    // 종량 과금으로 새는 것 차단
+  delete e.ANTHROPIC_API_KEY;
+  e.CLAUDE_CONFIG_DIR = p('runtime', 'state', 'claude-home');
+  e.DISABLE_TELEMETRY = '1';
+
   if (forZai) {
-    e.ANTHROPIC_BASE_URL  = env.ZAI_ANTHROPIC_BASE_URL || 'https://api.z.ai/api/anthropic';
+    e.ANTHROPIC_BASE_URL   = env.ZAI_ANTHROPIC_BASE_URL || 'https://api.z.ai/api/anthropic';
+    e.ANTHROPIC_API_KEY    = env.ZAI_API_KEY;   // --bare 는 API 키 방식만 허용
     e.ANTHROPIC_AUTH_TOKEN = env.ZAI_API_KEY;
-    delete e.CLAUDE_CODE_OAUTH_TOKEN;            // 워커에 Claude 자격증명 금지
+    delete e.CLAUDE_CODE_OAUTH_TOKEN;           // 워커에 Claude 자격증명 금지
   } else {
     e.CLAUDE_CODE_OAUTH_TOKEN = env.CLAUDE_CODE_OAUTH_TOKEN;
     delete e.ANTHROPIC_BASE_URL;
