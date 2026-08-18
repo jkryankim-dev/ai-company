@@ -26,7 +26,6 @@ function runClaudeCode(system, prompt, opt) {
     '--tools', 'Read,Write,Edit,Glob,Grep,Bash',
     '--max-turns', String(maxTurns),
   ];
-  if (forZai) args.push('--bare');           // bare 는 OAuth 불가 → 실무진 전용
   if (model) args.push('--model', model);
   for (const d of addDirs) if (d) args.push('--add-dir', `"${d}"`);
 
@@ -37,8 +36,9 @@ function runClaudeCode(system, prompt, opt) {
 
   if (forZai) {
     e.ANTHROPIC_BASE_URL   = env.ZAI_ANTHROPIC_BASE_URL || 'https://api.z.ai/api/anthropic';
-    e.ANTHROPIC_API_KEY    = env.ZAI_API_KEY;   // --bare 는 API 키 방식만 허용
-    e.ANTHROPIC_AUTH_TOKEN = env.ZAI_API_KEY;
+    e.ANTHROPIC_AUTH_TOKEN = env.ZAI_API_KEY;   // z.ai 는 AUTH_TOKEN 방식. API_KEY 와 병행 금지
+    e.CLAUDE_CODE_MAX_CONTEXT_TOKENS = '200000';                     // 미인식 모델 컨텍스트 경고 제거
+    e.CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = '1';
     delete e.CLAUDE_CODE_OAUTH_TOKEN;           // 워커에 Claude 자격증명 금지
   } else {
     e.CLAUDE_CODE_OAUTH_TOKEN = env.CLAUDE_CODE_OAUTH_TOKEN;
@@ -55,7 +55,7 @@ function runClaudeCode(system, prompt, opt) {
     child.on('error', ex => { clearTimeout(timer); reject(ex); });
     child.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error(`종료코드 ${code}: ${(err || out).slice(0, 300)}`));
+      if (code !== 0) return reject(new Error(`종료코드 ${code}: ${(err || out).slice(0, 1000)}`));
       resolve(out.trim());
     });
     child.stdin.write(`${system}\n\n---\n\n${prompt}`);
