@@ -18,6 +18,7 @@ const git = (args) => new Promise((resolve) => {
 });
 
 async function sync() {
+  await git(['pull', '--rebase', '--autostash']);   // 다른 곳(PC/VPS)의 변경을 먼저 수신
   const st = await git(['status', '--porcelain']);
   if (st.code !== 0) return log(`git 사용 불가: ${st.err}`);
   if (!st.out) return;                       // 바뀐 게 없으면 조용히 넘어간다
