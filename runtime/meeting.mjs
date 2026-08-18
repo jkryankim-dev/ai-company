@@ -76,7 +76,7 @@ log(`${spec.title} 시작 (${today()})`);
 
 // 1단계 — 수집 (병렬, 서로의 답을 보지 않는다)
 const reports = await Promise.all(crew.map(async s => {
-  const r = await ask(s, systemFor(s), `# 현재 열린 이슈\n${ctx}\n\n# 지시\n${spec.collect}`);
+  const r = await ask(s, systemFor(s), `# 현재 열린 이슈\n${ctx}\n\n# 사실 확인 의무\n답하기 전에 관련 파일을 직접 읽어라 (사규 12조). 수치는 저장소의 실측값을 쓰고 출처를 밝혀라.\n\n# 지시\n${spec.collect}`);
   return { s, text: r.text, ok: r.ok };
 }));
 const ok = reports.filter(r => r.ok);
