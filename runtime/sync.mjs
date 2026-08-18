@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const EVERY_MS = 15 * 60 * 1000;
+const EVERY_MS = 5 * 60 * 1000;
 const stamp = () => new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', hour12: false });
 const log = (m) => console.log(`[${stamp()}] ${m}`);
 
@@ -17,8 +17,20 @@ const git = (args) => new Promise((resolve) => {
   c.on('error', e => resolve({ code: -1, out: '', err: e.message }));
 });
 
+import fs from 'node:fs';
+
 async function sync() {
+  const before = (await git(['rev-parse', 'HEAD'])).out;
   await git(['pull', '--rebase', '--autostash']);   // 다른 곳(PC/VPS)의 변경을 먼저 수신
+  const after = (await git(['rev-parse', 'HEAD'])).out;
+  if (before && after && before !== after) {
+    const diff = (await git(['diff', '--name-only', before, after])).out;
+    if (/(^|\n)runtime\//.test(diff)) {
+      fs.mkdirSync(path.join(ROOT, 'runtime', 'state'), { recursive: true });
+      fs.writeFileSync(path.join(ROOT, 'runtime', 'state', 'restart-needed'), after);
+      log('런타임 코드 갱신 감지 — 재기동 플래그 설정');
+    }
+  }
   const st = await git(['status', '--porcelain']);
   if (st.code !== 0) return log(`git 사용 불가: ${st.err}`);
   if (!st.out) return;                       // 바뀐 게 없으면 조용히 넘어간다

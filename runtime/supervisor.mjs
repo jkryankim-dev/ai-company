@@ -20,7 +20,9 @@ const WORKERS = [
   { name: 'gateway',   script: 'runtime/gateway.mjs',   label: '대표실 게이트웨이' },
   { name: 'scheduler', script: 'runtime/scheduler.mjs', label: '근태 스케줄러' },
   { name: 'sync',      script: 'runtime/sync.mjs',      label: '자동 기록(git)' },
+  { name: 'inbox',     script: 'runtime/inbox.mjs',     label: '지시함 워커' },
 ];
+const children = new Set();
 
 const state = {};
 
@@ -30,6 +32,8 @@ function start(w) {
   out.write(`\n===== ${stamp()} 기동 =====\n`);
 
   const child = spawn(process.execPath, [w.script], { cwd: ROOT, env: process.env });
+  children.add(child);
+  child.on('exit', () => children.delete(child));
   s.pid = child.pid;
   log(`▶ ${w.label} 기동 (pid ${child.pid})`);
 
@@ -51,9 +55,16 @@ function start(w) {
 log('두레 관리자 시작. 창을 닫으면 회사가 퇴근합니다.');
 WORKERS.forEach(start);
 
+const FLAG = path.join(ROOT, 'runtime', 'state', 'restart-needed');
 setInterval(() => {
   fs.writeFileSync(path.join(ROOT, 'runtime', 'state', 'supervisor.json'),
     JSON.stringify({ alive: stamp(), workers: state }, null, 2));
+  if (fs.existsSync(FLAG)) {
+    log('코드 갱신 감지 — 전체 재기동 (systemd 가 되살린다)');
+    try { fs.rmSync(FLAG); } catch {}
+    for (const c of children) { try { c.kill(); } catch {} }
+    setTimeout(() => process.exit(0), 2000);
+  }
 }, 30000);
 
 process.on('SIGINT', () => { log('종료 신호 수신. 퇴근합니다.'); process.exit(0); });
