@@ -35,6 +35,19 @@ async function webhookFor(channelName) {
   return store[channelName];
 }
 
+
+// 표시명: 이름(엔진) · 직함   예) 한실장(claude) · 비서실장 / 김기획(glm-5.3) · 프로덕트 매니저
+function engineLabel(engine) {
+  const e = String(engine || '').toLowerCase();
+  if (!e) return '';
+  if (e.startsWith('claude')) return 'claude';
+  return e.replace(/^zai\//, '');
+}
+function nameTag(staff) {
+  const eng = engineLabel(staff.engine);
+  return eng ? `${staff.name}(${eng}) · ${staff.title}` : `${staff.name} · ${staff.title}`;
+}
+
 const chunk = (s, n = 1900) => {
   const out = [];
   for (const para of s.split('\n')) {
@@ -51,7 +64,7 @@ export async function say(channelName, staff, text) {
   for (const part of chunk(text.trim())) {
     const r = await fetch(url, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: `${staff.name} · ${staff.title}`, content: part }),
+      body: JSON.stringify({ username: nameTag(staff), content: part }),
     });
     if (!r.ok) log(`  ! 디스코드 게시 실패 #${channelName} HTTP ${r.status}`);
     await new Promise(s => setTimeout(s, 400)); // rate limit 여유
