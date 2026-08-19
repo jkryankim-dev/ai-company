@@ -1,0 +1,28 @@
+{
+  "schema": "주간 집계. D0 = 프로덕션 공개일(미정). null = 미수집. 값 출처: 플레이 콘솔·AdMob 콘솔(대표 전달), 수집·갱신: 정지표",
+  "updated": "2026-08-19",
+  "updated_by": "analyst",
+  "app": "com.jkryankim.beadssort",
+  "status": "출시 전 — 비공개 테스트 14일 시계 가동 중(2026-08-18 대표 확인, context.md), 최단 프로덕션 신청 2026-09-01 전후",
+  "success_criteria_ref": "projects/beads-sort/strategy-analyst.md",
+  "weeks": [
+    {
+      "week": "pre-launch-W1",
+      "range": "2026-08-18 ~ 08-24",
+      "new_installs": null,
+      "cumulative_installs": null,
+      "crash_rate_pct": null,
+      "rating": null,
+      "rating_count": null,
+      "ad_impressions": null,
+      "policy_alerts": null,
+      "note": "비공개 테스트 기간. 스토어 지표 미발생. 테스터 참여 지표는 tester-tracker.md 참조"
+    }
+  ],
+  "issue_metrics": {
+    "weekly_closed": null,
+    "weekly_created": null,
+    "median_lead_time_days": null,
+    "note": "이 환경에 gh CLI 없음(2026-08-19 실측) — 이슈 데이터 수집 불가, 확인 필요"
+  }
+}
