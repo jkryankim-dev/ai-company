@@ -5,3 +5,5 @@ runtime/state/
 runtime/logs/
 *.log
 _to_delete/
+.env.bak*
+.env.*.bak
