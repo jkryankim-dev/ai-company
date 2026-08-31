@@ -1,6 +1,6 @@
 {
   "schema": "주간 집계. D0 = 프로덕션 공개일(미정). null = 미수집. 값 출처: 플레이 콘솔·AdMob 콘솔(대표 전달), 수집·갱신: 정지표",
-  "updated": "2026-08-28",
+  "updated": "2026-08-31",
   "updated_by": "analyst",
   "app": "com.jkryankim.beadssort",
   "status": "출시 전 — 비공개 테스트 14일 시계 가동 중(2026-08-18 대표 확인, context.md), 최단 프로덕션 신청 2026-09-01 전후",
@@ -28,7 +28,19 @@
       "rating_count": null,
       "ad_impressions": null,
       "policy_alerts": null,
-      "note": "진행 중(08-28 행 추가). 스토어 지표 미발생, 콘솔 실측값 대표 입력 대기"
+      "note": "08-31 마감 처리 — 콘솔 실측값 미입력으로 전 항목 null 확정(W1과 동일). 8/20 이후 콘솔값 수집 창구 부재(approvals.md #7, 5일 대기)"
+    },
+    {
+      "week": "pre-launch-W3",
+      "range": "2026-09-01 ~ 09-07",
+      "new_installs": null,
+      "cumulative_installs": null,
+      "crash_rate_pct": null,
+      "rating": null,
+      "rating_count": null,
+      "ad_impressions": null,
+      "policy_alerts": null,
+      "note": "행 추가(08-31). 최단 프로덕션 신청 가능 구간 — 신청 시 스토어 지표 발생 개시"
     }
   ],
   "issue_metrics": {
