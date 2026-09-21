@@ -1,6 +1,6 @@
 {
   "schema": "주간 집계. D0 = 프로덕션 공개일(미정). null = 미수집. 값 출처: 플레이 콘솔·AdMob 콘솔(대표 전달), 수집·갱신: 정지표",
-  "updated": "2026-09-14",
+  "updated": "2026-09-21",
   "updated_by": "analyst",
   "app": "com.jkryankim.beadssort",
   "status": "출시 전 — 비공개 테스트 14일 시계 가동 중(2026-08-18 대표 확인, context.md), 최단 프로덕션 신청 2026-09-01 전후",
@@ -53,12 +53,24 @@
       "ad_impressions": null,
       "policy_alerts": null,
       "note": "09-14 마감 처리 — 콘솔 실측값 미입력으로 전 항목 null 확정(4주 연속). 입력 창구 console-input.md는 9/8 신설됐으나 금일 실측 기준 붙여넣기 칸 비어 있음(입력 0건) — 창구 존재와 값 도착은 별개. approvals #1(26일)·#7(19일) 대기 지속. 프로덕션 신청 여부·D0 여전히 미확인(대표몫)"
+    },
+    {
+      "week": "pre-launch-W5",
+      "range": "2026-09-15 ~ 09-21",
+      "new_installs": null,
+      "cumulative_installs": null,
+      "crash_rate_pct": null,
+      "rating": null,
+      "rating_count": null,
+      "ad_impressions": null,
+      "policy_alerts": null,
+      "note": "미입력 — console-input.md 붙여넣기 칸 9/8 신설 이후 0건(13일). 5주 연속 null. 집계 재개 트리거: 창구 입력 감지(org/analyst.md 마감 규칙, 2026-09-21 기록)"
     }
   ],
   "issue_metrics": {
-    "weekly_closed": null,
-    "weekly_created": null,
+    "weekly_closed": 0,
+    "weekly_created": 0,
     "median_lead_time_days": null,
-    "note": "이 환경에 gh CLI 없음(2026-09-14 재실측, 8/19 첫 실측 이후 지속) — 이슈 데이터 수집 불가, approvals #3(21일 대기)"
+    "note": "수집 재개(2026-09-21). gh 설치 완료(~/.local/bin/gh 2.63.2, approvals#3) + 레포 public 확인으로 무인증 REST API로 집계(runtime/meeting.mjs:60과 동일 방식, 금일 실측 8개 이슈 전건 open·생성일 8/18). weekly_created/closed는 GitHub 기준 9/15~21값. lead time은 closed 이슈 0건으로 산출 불가 — #1~#4는 9/21 사내 종료 판정(approvals#5)뿐 GitHub close는 미실행(gh auth 없음, 대표몫). 쓰기(이슈 생성·close)에는 토큰 필요, 읽기는 불필요"
   }
 }
