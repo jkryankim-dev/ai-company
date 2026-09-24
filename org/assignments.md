@@ -18,7 +18,7 @@
 | #8 | 이빌드 | 이 저장소 runtime/gateway.mjs 대상 — APP_REPO 불필요. 하위 산출물 2개 분리 판정(최감사 마찰3·이빌드 마찰2 반영): (1) 유실 방지 — 합격(2026-09-15, 테스트 3/3). (2) 처리 상태 표시 — 미제출, 완료 조건 확정(2026-09-22, runtime/docs/issue-8-status-display-spec.md — 이빌드 착수 가능), 이빌드 담당 계속 |
 | 신청서 10문항 답안 (sprint-01 기준1 — 이슈 없음, gh 부재) | 김기획 | 9/14 착수 — feat/application-answers 스캐폴드 커밋(aa21b8f, ADR 0008 요건 충족). 답안 확정은 approvals #7 콘솔값 대기 |
 | QA 검증 (배정 아님, 상시) | 최감사 | 위 각 행·아래 '검증 대기' 절 산출물 검증. approvals.md 자체진행 항목(#3·#5·#8)도 완료 시 여기서 검증 |
-| approvals#3 gh CLI 설치 | 정지표 | 완료(2026-09-21) — ~/.local/bin/gh 2.63.2 루트 없는 설치(`gh --version` 확인). 마감(9/19) 2일 초과 후 완료. 이슈 읽기는 무인증 API로 수집 재개(weekly.json issue_metrics), 쓰기는 approvals#11(토큰) 대기 |
+| approvals#3 gh CLI 설치 | 정지표 | 완료(2026-09-21) — ~/.local/bin/gh 2.63.2 루트 없는 설치(`gh --version` 확인). 마감(9/19) 2일 초과 후 완료. 이슈 읽기는 무인증 API로 수집 재개(weekly.json issue_metrics), 쓰기는 approvals#11(토큰) 대기. QA 통과(2026-09-24, qa-log.md — `PATH="$HOME/.local/bin:$PATH" gh --version` 실측). PATH 비노출 사실 확인(정지표, 9/24): 비로그인 셸은 .profile:26 미적용·sudo 불가로 시스템 등록 불가 — 호출 시 전 경로 또는 PATH 지정 필요 |
 | approvals#5 #1~#4 종료 처리 판정 | 김기획 | 완료(2026-09-21) — 판정 #1~#4 전건 산출물 완비(approvals.md 갱신 로그). GitHub close는 gh 확보 후 일괄. 마감(9/19) 주말 경과 후 금일 실행 |
 | approvals#8 '스토어 개선 2안' 이슈 파일 접수 | 서카피 | 완료(2026-09-21) — issues-draft.md '이슈 접수' 섹션 등록(사규 3조 3항목). 마감(9/19) 주말 경과 후 금일 실행. gh 확보 시 GitHub 이관 |
 
@@ -55,3 +55,9 @@
   org/analyst.md 마감 규칙 기록(9/18 마찰 2 자구책). 마감(9/19) 2일 초과는 경과 사실로 남긴다.
 - 2026-09-22: 김기획 — #8 하위(2) 완료 조건 확정. 근거: 이슈 #8 본문(무인증 REST 열람 — gh는
   읽기도 인증 요구 실측)·ce36a50 스캐폴드 테스트. 지시서 전문 runtime/docs/issue-8-status-display-spec.md.
+- 2026-09-24: 최감사 — approvals#3·#5·#8 자체진행 완료건 QA 검증 완료, 전건 통과. 판정 정본:
+  projects/beads-sort/qa-log.md 각 항목 최상단 1행.
+- 2026-09-24: 정지표 — 9/23 스탠드업 충돌(approvals#3 PATH 재현성) 확인 요청 회신. 실측:
+  `command -v gh` 미발견(에이전트 셸 PATH에 ~/.local/bin 없음), .profile:25-26 등록은 로그인 셸만
+  적용, sudo 불가로 /usr/local/bin 등록 불가. 최감사 판정(통과)과 모순 없음 — 검증은 PATH 지정·
+  전 경로로 재현 가능. approvals#3 행에 요지 기록.
