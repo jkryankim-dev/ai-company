@@ -12,12 +12,12 @@
 | #3 | 오운영 | 종결 — approvals#5 판정(9/21) | 종료 처리 승인(2026-09-21, approvals#5) — 산출물 완비·운영 지속 (tester-tracker.md·test-journal.md) |
 | #4 | 서카피 | 종결 — approvals#5 판정(9/21) | 종료 처리 승인(2026-09-21, approvals#5) — 리마인드 3종 완비(recruit-kit.md §4). 발송 승인은 approvals#6 대기 |
 | #5-빌드: targetSdk 대조·AAB 빌드·서명 검증 | 박빌드 | issues-draft.md §#5 — targetSdk 대조·AAB 빌드 로그·서명 확인·R8 유지 | APP_REPO 값 확인 후 착수 (.env 빈값 — deploy/README.md 기준). #6-기술은 이 행과 동일 전제 |
-| #5-스크립트: verify-release.sh 0~5단계 완성·테스트·PR | 박빌드 | issues-draft.md §#5 검증 방법(출력 첨부 전제) + 9/25 종합 지시(2026-09-25-standup.md 종합 2항) | dry-run 모드·테스트 3종 추가 완료 — feat/5-verify-script 7b80e09(9/29 00:03), node --test 3/3 통과. QA 검증 대기 큐 등록(9/29). PR 제출은 approvals#11(gh 쓰기 토큰, 대표 전용) 확보 후 (2026-09-28 박빌드 분할 등록 — 근거 2026-09-25-retro.md:213 '당사자 자체 실행'·마찰보고 박빌드 마찰1) |
+| #5-스크립트: verify-release.sh 0~5단계 완성·테스트·PR | 박빌드 | issues-draft.md §#5 검증 방법(출력 첨부 전제) + 9/25 종합 지시(2026-09-25-standup.md 종합 2항) | dry-run 모드·테스트 3종 추가 완료 — feat/5-verify-script 7b80e09(9/29 00:03), node --test 3/3 통과. QA 통과(2026-09-30, qa-log.md — 독립 재실행 3/3 확인). PR 제출은 approvals#11(gh 쓰기 토큰, 대표 전용) 확보 후 (2026-09-28 박빌드 분할 등록 — 근거 2026-09-25-retro.md:213 '당사자 자체 실행'·마찰보고 박빌드 마찰1) |
 | #6-기술: AD_ID 권한 확인 | 박빌드 | issues-draft.md §#6 — 병합 매니페스트 AD_ID 실물·답항 근거 표 | #5와 동일 전제(APP_REPO) |
 | #6-카피: 데이터 안전 양식 답안 초안 | 서카피 | 종결 — data-safety-draft.md 최상단 판정(9/10) | 초안 제출(9/3)·김기획 검증 합격(9/10, data-safety-draft.md 최상단) — 광고 ID 답항은 #6-기술(AD_ID) 확정 대기 |
 | #7 | 오운영 | 종결 — 검증 합격(9/3, 회의록 31·37행) | policy-kit.md 제출(9/2) — 김기획 검증 합격(9/3, 회의록 31·37행) |
 | #8 | 이빌드 | 하위(1) 종결(테스트 3/3, 9/15) · 하위(2) runtime/docs/issue-8-status-display-spec.md(9/22 확정) | 이 저장소 runtime/gateway.mjs 대상 — APP_REPO 불필요. 하위 산출물 2개 분리 판정(최감사 마찰3·이빌드 마찰2 반영): (1) 유실 방지 — 합격(2026-09-15, 테스트 3/3). (2) 처리 상태 표시 — 미제출, 완료 조건 확정(2026-09-22, runtime/docs/issue-8-status-display-spec.md — 이빌드 착수 가능), 이빌드 담당 계속 |
-| 신청서 10문항 답안 (sprint-01 기준1 — 이슈 없음, gh 부재) | 김기획 | sprint-01.md §완료 기준(51행)·:29(검증 최감사)·closed-test-playbook.md:54(과업) | 9/14 착수(aa21b8f) → 9/29 콘솔값 비의존 3문항(1·3·4) 답안 초안 제출(c960388 §1-a — 검증 대기). 잔여 의존 문항(2)·원문 전사(5~10)·전체 확정은 approvals#7 콘솔값 대기 |
+| 신청서 10문항 답안 (sprint-01 기준1 — 이슈 없음, gh 부재) | 김기획 | sprint-01.md §완료 기준(51행)·:29(검증 최감사)·closed-test-playbook.md:54(과업) | 9/14 착수(aa21b8f) → 9/29 콘솔값 비의존 3문항(1·3·4) 답안 초안 제출(c960388 §1-a). QA 통과(2026-09-30, qa-log.md — recruit-kit.md·test-journal.md·context.md 대조 확인. 정본 최상단 검증행 갱신 a8db619). 잔여 의존 문항(2)·원문 전사(5~10)·전체 확정은 approvals#7 콘솔값 대기(상신 2026-08-26) |
 | QA 검증 (배정 아님, 상시) | 최감사 | 해당 없음(상시 업무 — 판정 기준 ADR 0006) | 위 각 행·아래 '검증 대기' 절 산출물 검증. approvals.md 자체진행 항목(#3·#5·#8)도 완료 시 여기서 검증 |
 | approvals#3 gh CLI 설치 | 정지표 | 종결 — qa-log.md 최상단 판정(9/24) | 완료(2026-09-21) — ~/.local/bin/gh 2.63.2 루트 없는 설치(`gh --version` 확인). 마감(9/19) 2일 초과 후 완료. 이슈 읽기는 무인증 API로 수집 재개(weekly.json issue_metrics), 쓰기는 approvals#11(토큰) 대기. QA 통과(2026-09-24, qa-log.md — `PATH="$HOME/.local/bin:$PATH" gh --version` 실측). PATH 비노출 사실 확인(정지표, 9/24): 비로그인 셸은 .profile:26 미적용·sudo 불가로 시스템 등록 불가 — 호출 시 전 경로 또는 PATH 지정 필요 |
 | approvals#5 #1~#4 종료 처리 판정 | 김기획 | 종결 — approvals.md 갱신 로그(9/21)·qa-log.md(9/24) | 완료(2026-09-21) — 판정 #1~#4 전건 산출물 완비(approvals.md 갱신 로그). GitHub close는 gh 확보 후 일괄. 마감(9/19) 주말 경과 후 금일 실행 |
@@ -39,8 +39,8 @@
 | 산출물 | 검증자 | 제출일 | 상태 |
 |---|---|---|---|
 | projects/beads-sort/store-copy-2drafts.md | 김기획 | 2026-09-15 | 합격(2026-09-21) |
-| #5-스크립트 verify-release.sh dry-run+테스트 (feat/5-verify-script 7b80e09, 테스트 3/3) | 최감사 | 2026-09-29 | 대기 |
-| 신청서 답안 비의존 3문항 초안 (feat/application-answers c960388, §1-a) | 최감사 | 2026-09-29 | 대기 |
+| #5-스크립트 verify-release.sh dry-run+테스트 (feat/5-verify-script 7b80e09, 테스트 3/3) | 최감사 | 2026-09-29 | 합격(2026-09-30, qa-log.md) |
+| 신청서 답안 비의존 3문항 초안 (feat/application-answers c960388, §1-a) | 최감사 | 2026-09-29 | 합격(2026-09-30, qa-log.md) |
 
 - 2026-09-03: 신설 (남기록). #7 상태만 9/2 기준으로 갱신, 나머지는 원본 이식.
 - 2026-09-04: 남기록 — #7·#6-카피 상태 갱신(9/3 회의록·커밋 c1164f2 기준). 9/3 종합이 지적한
@@ -84,3 +84,6 @@
   경로·3 버그·4 빌드) 답안 초안 제출(feat/application-answers c960388). 9/28 전사회의 김기획 제안 2
   (2026-09-28-allhands.md:51) 실행 — 기존 배정 행 범위 내 진행이라 신규 판정 불요. 검증 대기 절에
   최감사 행 등록.
+- 2026-09-30: 김기획 — 금일 최감사 판정(신청서 답안 §1-a 통과, qa-log.md)을 산출물 최상단 검증행
+  (정본, ADR 0006)에 반영 — feat/application-answers a8db619. 배정표 상태 열 2행(#5-스크립트·신청서
+  답안)·검증 대기 행 합격 표기는 최감사가 선행 갱신 — 편집 경합 1회(재독 후 병행 확인, 중복 없음).
