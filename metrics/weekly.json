@@ -1,6 +1,6 @@
 {
   "schema": "주간 집계. D0 = 프로덕션 공개일(미정). null = 미수집. 값 출처: 플레이 콘솔·AdMob 콘솔(대표 전달), 수집·갱신: 정지표",
-  "updated": "2026-09-28",
+  "updated": "2026-10-01",
   "updated_by": "analyst",
   "app": "com.jkryankim.beadssort",
   "status": "출시 전 — 비공개 테스트 14일 시계 가동 중(2026-08-18 대표 확인, context.md), 최단 프로덕션 신청 2026-09-01 전후",
@@ -83,6 +83,9 @@
     "weekly_closed": 0,
     "weekly_created": 0,
     "median_lead_time_days": null,
-    "note": "2026-09-28 실측(무인증 REST API, runtime/meeting.mjs:60 방식): 8개 이슈 전건 open·생성일 8/18, W6(9/22~28) 생성 0·close 0. 9/21 이후 이슈 생성·close 없음. lead time은 closed 0건으로 산출 불가 — #1~#4의 사내 종료 판정(9/21, approvals#5) 후 GitHub close 계속 미실행(gh auth 없음, 대표몫). 쓰기(생성·close)에는 토큰 필요, 읽기는 불필요"
+    "note": "2026-09-28 실측(무인증 REST API, runtime/meeting.mjs:60 방식): 8개 이슈 전건 open·생성일 8/18, W6(9/22~28) 생성 0·close 0. 9/21 이후 이슈 생성·close 없음. lead time은 closed 0건으로 산출 불가 — #1~#4의 사내 종료 판정(9/21, approvals#5) 후 GitHub close 계속 미실행(gh auth 없음, 대표몫). 쓰기(생성·close)에는 토큰 필요, 읽기는 불필요. 2026-10-01 재실측: open 8건·변동 없음",
+    "qa_first_pass_rate": 1.0,
+    "qa_sample_count": 5,
+    "qa_note": "2026-10-01 최초 집계(누적 — 반려 재검 건이 아직 없어 주간 분리 불가): qa-log.md 판정 5건 전부 1회 통과(9/24 3건·9/30 2건). 표본 5건으로 추세 아님(org/analyst.md 원칙)"
   }
 }
