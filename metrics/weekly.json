@@ -1,6 +1,6 @@
 {
   "schema": "주간 집계. D0 = 프로덕션 공개일(미정). null = 미수집. 값 출처: 플레이 콘솔·AdMob 콘솔(대표 전달), 수집·갱신: 정지표",
-  "updated": "2026-10-01",
+  "updated": "2026-10-02",
   "updated_by": "analyst",
   "app": "com.jkryankim.beadssort",
   "status": "출시 전 — 비공개 테스트 14일 시계 가동 중(2026-08-18 대표 확인, context.md), 최단 프로덕션 신청 2026-09-01 전후",
@@ -86,6 +86,8 @@
     "note": "2026-09-28 실측(무인증 REST API, runtime/meeting.mjs:60 방식): 8개 이슈 전건 open·생성일 8/18, W6(9/22~28) 생성 0·close 0. 9/21 이후 이슈 생성·close 없음. lead time은 closed 0건으로 산출 불가 — #1~#4의 사내 종료 판정(9/21, approvals#5) 후 GitHub close 계속 미실행(gh auth 없음, 대표몫). 쓰기(생성·close)에는 토큰 필요, 읽기는 불필요. 2026-10-01 재실측: open 8건·변동 없음",
     "qa_first_pass_rate": 1.0,
     "qa_sample_count": 5,
-    "qa_note": "2026-10-01 최초 집계(누적 — 반려 재검 건이 아직 없어 주간 분리 불가): qa-log.md 판정 5건 전부 1회 통과(9/24 3건·9/30 2건). 표본 5건으로 추세 아님(org/analyst.md 원칙)"
+    "qa_note": "2026-10-01 최초 집계(누적 — 반려 재검 건이 아직 없어 주간 분리 불가): qa-log.md 판정 5건 전부 1회 통과(9/24 3건·9/30 2건). 표본 5건으로 추세 아님(org/analyst.md 원칙)",
+    "ceo_interventions": 0,
+    "ceo_interventions_note": "2026-10-02 첫 집계(org/analyst.md:23 기본지표 '대표 개입 횟수' 미집계 발견 — qa_first_pass_rate(10/1)와 동일 구조의 역할 내 자체 집계). 측정 프록시: approvals.md 대표 회신·console-input.md 입력(대표 접근 영역 파일 기록만 측정 가능, 디스코드 발언 미측정). W7(9/29~10/2 현재) 0건 — approvals 11행 중 대표 전용 대기 5건(#1·#2·#6·#7·#11) 전부 무회신, 처리 6건은 전부 회사 자체(ADR 0007·0011), console-input 입력 0건. 파일 기록상 마지막 대표 행위는 8/19 옵트인 33명 확인(tester-tracker.md:9) — 이후 44일 무기록"
   }
 }

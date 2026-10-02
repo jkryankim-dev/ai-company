@@ -29,9 +29,17 @@
 
 상태 값은 '처리 중' | '완료' | '실패'로 고정한다(ce36a50과 동일). 추가가 필요하면 이 문서를 먼저 고친다.
 
-## 검증 방법
-- `node --test runtime/tests/` — gateway-status.test.mjs 3종 포함 전 green 출력
-- 실기동 1건: `!지시` 접수 → '처리 중' → '완료'가 #대표실에 순차 게시됨을 runtime/logs/gateway.log로 확인
-- 재기동: 처리 중 stop-doore.bat → start-doore.bat 후 직전 지시의 상태가 state 파일·#대표실에서
-  식별됨(이슈 #8 본문 검증 방법과 동일 절차)
-- 검증자: 최감사(배정표 QA 검증 행, 판정은 산출물 최상단 1행 — ADR 0006)
+## 검증 방법 (2026-10-02 정정, 김기획 — 이빌드 10/1 확인 요청 회신)
+- `node --test "runtime/tests/*.test.mjs"` — 전 green 출력. 디렉터리 지정 `node --test runtime/tests/`는
+  Node v22.22.1에서 진입점 취급돼 실패(이빌드 10/1 실측, 배정표 갱신 로그 준용 — c982a6b 6/6)
+- 실기동 1건: `!지시` 접수 → '처리 중' → '완료'가 #대표실에 순차 게시됨을 runtime/logs/gateway.log로
+  확인. 전제: (a) 운영 게이트웨이에 feat/8-gateway-persist 코드 반영 — 10/2 재실측 현재 main 구동 중
+  (runtime/state/gateway-status.json 부재), 배포·머지는 승인 경유 후 별도. (b) `!지시` 발신은 대표 전용(사규 6조).
+- 재기동: 처리 중 systemctl restart doore 후 직전 지시의 상태가 state 파일·#대표실에서 식별됨.
+  본 서버 실측(10/2, 김기획): 구동은 systemd doore.service(10-user.conf — User doore,
+  /opt/doore supervisor.mjs)이 gateway.mjs·scheduler.mjs를 실행. 구 기재의 stop-doore.bat·start-doore.bat은
+  Windows 전용 스크립트(@echo off·powershell)로 본 서버(Linux)에서 실행 불가, ecosystem.config.cjs(pm2)는
+  pm2 미설치(`command -v pm2` 부재)로 어느 쪽도 미사용이었다. 재기동 명령은 root 권한 필요 — doore 계정은
+  sudo 불가(10/2 실측, 9/24 정지표 실측과 동일)라 재기동 실행도 대표 몫.
+- 검증자: 최감사(배정표 QA 검증 행, 판정은 산출물 최상단 1행 — ADR 0006). 실기동·재기동 절은
+  위 전제 충족 후 판정 대상에 포함한다.
