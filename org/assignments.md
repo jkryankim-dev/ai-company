@@ -48,7 +48,7 @@
 | #5-스크립트 verify-release.sh dry-run+테스트 (feat/5-verify-script 7b80e09, 테스트 3/3) | 최감사 | 2026-09-29 | 합격(2026-09-30, qa-log.md) |
 | 신청서 답안 비의존 3문항 초안 (feat/application-answers c960388, §1-a) | 최감사 | 2026-09-29 | 합격(2026-09-30, qa-log.md) |
 | #8 하위(2) 처리 상태 표시 — 코드·단위테스트 (feat/8-gateway-persist c982a6b, 6/6) | 최감사 | 2026-10-01 | 부분 통과(2026-10-02, qa-log.md — 코드·단위테스트 범위 통과, 실기동·재기동은 대표 `!지시` 발신 후 별건) |
-| 운영 환경 정본 runtime/docs/ops-env.md (마찰보고 10/2 마찰 1 처방) | 최감사 | ops-env.md 최상단 검증행 (검증: systemd·Node·sudo·gh·테스트 명령 각 항 실측값 인용 정합) | 대기 |
+| 운영 환경 정본 runtime/docs/ops-env.md (마찰보고 10/2 마찰 1 처방) | 최감사 | ops-env.md 최상단 검증행 (검증: systemd·Node·sudo·gh·테스트 명령 각 항 실측값 인용 정합) | 반려(2026-10-06, qa-log.md — 테스트 명령 워크트리 의존 미기재, main에서 거짓 '0 tests') |
 | D-0 출시 콘텐츠 3종 초안 (projects/beads-sort/d0-content.md — 판정 정본은 산출물 최상단 1행) | 김기획 | 2026-10-05 | 대기 |
 
 - 2026-09-03: 신설 (남기록). #7 상태만 9/2 기준으로 갱신, 나머지는 원본 이식.

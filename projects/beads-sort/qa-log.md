@@ -75,7 +75,40 @@ APP_REPO 확보 후 별건.
 코드·단위테스트 범위는 통과로 확정하고, 실기동·재기동 확인은 대표의 `!지시` 발신 이후
 별건으로 남긴다. 그 전까지 #8 하위(2)는 "부분 통과(실기동 미확인)"로 배정표에 기재한다.
 
+## ops-env.md — 운영 환경 정본
+
+**검증자/날짜/판정**: 최감사 / 2026-10-06 / 반려
+
+근거(각 항 금일 실측 재대조):
+- §1 구동 방식: `systemctl show doore.service -p FragmentPath,DropInPaths,User,Group,WorkingDirectory,ExecStart`
+  실측 — drop-in이 `User=doore`·`WorkingDirectory=/opt/doore`로 덮는 사실 일치. 정확.
+- §2 Node `v22.22.1`(`node --version`), sudo 불가(`sudo -n true` 거부), gh PATH 비노출
+  (`~/.local/bin/gh` 실존, PATH 미포함) — 전부 일치. 정확.
+- §2 "운영 게이트웨이는 main 코드로 구동" — `ps aux`로 `node runtime/gateway.mjs` PID 확인,
+  `/opt/doore` HEAD(07940a7)와 대조 일치. 정확.
+
+**반려 사유**:
+1. §2의 `node --test "runtime/tests/*.test.mjs"` 명령은 **main 체크아웃(/opt/doore)에는
+   `runtime/tests/` 디렉터리 자체가 없어** 그 경로에서 실행하면 "0 tests"로 조용히 끝난다
+   (금일 재현: `/opt/doore`에서 실행 결과 `# tests 0`). 테스트 파일은
+   `projects/.worktrees/dev_1/runtime/tests/*.test.mjs`에만 존재하며, 그 워크트리 안에서
+   실행해야 6/6으로 통과한다(금일 재현 확인). 문서는 이 위치 의존성을 적지 않아, 지시서
+   독자가 문서 그대로 main에서 명령을 돌리면 "테스트 없음"을 "테스트 통과/해당 없음"으로
+   오인할 거짓 음성 구조다 — 스탠드업 파일 경합 메모의 동일 패턴(상대경로·cwd 불일치).
+2. 이 문서는 "지시서·runbook의 §검증 방법은 이 문서에서 인용만 한다"는 정본 역할(문서 5행)이라
+   위 결함이 그대로 하위 지시서 전체로 전파된다.
+
+**고쳐야 할 것**:
+1. §2 테스트 명령 앞에 실행 디렉터리를 명시한다(예: "해당 feature 워크트리
+   `projects/.worktrees/dev_N/` 안에서 실행 — main(`/opt/doore`)에는 `runtime/tests/`가
+   존재하지 않아 같은 명령이 거짓으로 '0 tests' 반환함을 명기").
+2. 재제출 시 위 1건 정정 여부만 재대조하면 됨(나머지 항목은 금일 통과 확인).
+
+리스크: 낮음(문서 결함, 운영 영향 없음) — 단, 정본 문서라 방치 시 후속 지시서들이 동일 오류를 복제.
+
 ---
 - 2026-09-24: 최감사 — 첫 로그 신설, approvals#3·#5·#8 세 건 전건 통과 판정.
 - 2026-09-30: 최감사 — #5-스크립트·신청서 답안 비의존 3문항 두 건 QA 통과 판정 추가.
 - 2026-10-02: 최감사 — #8 하위(2) 코드·단위테스트 범위 통과, 실기동·재기동은 대표 전용 발신 대기로 분리.
+- 2026-10-06: 최감사 — ops-env.md 반려(테스트 명령 워크트리 의존 미기재, main에서 거짓 '0 tests').
+  김기획에게 정정 반송.
