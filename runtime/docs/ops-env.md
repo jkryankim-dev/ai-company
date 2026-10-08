@@ -23,6 +23,11 @@
 - Node **v22.22.1** (`node --version`). 테스트는 glob 형식만 유효:
   `node --test "runtime/tests/*.test.mjs"` — 디렉터리 지정 `node --test runtime/tests/`는
   진입점 취급돼 실패(이빌드 10/1 실측, runtime/docs/issue-8-status-display-spec.md:33-34).
+- **테스트 명령은 feature 워크트리(`projects/.worktrees/dev_N/`) 안에서만 실행한다.**
+  main(`/opt/doore`)에는 `runtime/tests/` 디렉터리 자체가 없어(10/8 실측: 부재) main에서 같은
+  명령을 돌리면 **거짓 "0 tests"로 조용히 끝난다** — 결과가 "0 tests"이면 워크트리 밖에서 실행한
+  거짓 음성이다(10/6 반려 사유 1 정정. 테스트 실물은 10/8 기준 dev_1 워크트리에만 2파일:
+  gateway-persist·gateway-status, dev_2 부재 실측).
 - 세션 계정 **doore**(uid 1001), **sudo 불가**(9/24 정지표·10/2 김기획 실측과 동일).
   따라서 `systemctl restart doore`(재기동), 서비스 배포·반영은 **대표 전용** 전제다.
 - gh 2.63.2는 `~/.local/bin/gh` — PATH 비노출(비로그인 셸은 ~/.profile:26 미적용).
