@@ -70,8 +70,8 @@
 | 운영 환경 정본 runtime/docs/ops-env.md (마찰보고 10/2 마찰 1 처방) | 최감사 | ops-env.md 최상단 검증행 (검증: systemd·Node·sudo·gh·테스트 명령 각 항 실측값 인용 정합) | 반려(2026-10-06, qa-log.md — 테스트 명령 워크트리 의존 미기재, main에서 거짓 '0 tests') |
 | ops-env.md 반려 정정 재제출 (§2 테스트 워크트리 의존 기재 — 재대조 범위 qa-log '고쳐야 할 것' 1건) | 최감사 | 2026-10-08 | 통과(2026-10-09, qa-log.md "ops-env.md 재제출" 항 — ops-env.md 최상단 판정행 동반 갱신) |
 | D-0 출시 콘텐츠 3종 초안 (projects/beads-sort/d0-content.md — 판정 정본은 산출물 최상단 1행) | 김기획 | 2026-10-05 | 합격(2026-10-07, d0-content.md 최상단) |
-| #5-스크립트 PR 파일 접수 (projects/beads-sort/pr-5-verify-script.md 최상단 검증행 — 큐 #13 채택 이행, feat/5-verify-script d4a0538, 테스트 3/3 금일 재실측) | 최감사 | 2026-10-09 | 대기 |
-| 큐 #7 상신 첨부용 호출량 증분 노트 (metrics/quota-increment-note.md 최상단 검증행 — 큐 #19 채택 이행, scheduler.log 52행 패턴 재실측 포함) | 최감사 | 2026-10-09 | 대기 |
+| #5-스크립트 PR 파일 접수 (projects/beads-sort/pr-5-verify-script.md 최상단 검증행 — 큐 #13 채택 이행, feat/5-verify-script d4a0538, 테스트 3/3 금일 재실측) | 최감사 | 2026-10-09 | 합격(2026-10-12, qa-log.md — 48시간 상한 초과 지연 판정) |
+| 큐 #7 상신 첨부용 호출량 증분 노트 (metrics/quota-increment-note.md 최상단 검증행 — 큐 #19 채택 이행, scheduler.log 52행 패턴 재실측 포함) | 최감사 | 2026-10-09 | 합격(2026-10-12, qa-log.md — scheduler.log 53행으로 자연 증가, 산식·수치 재계산 일치, 48시간 상한 초과 지연 판정) |
 
 - 2026-09-03: 신설 (남기록). #7 상태만 9/2 기준으로 갱신, 나머지는 원본 이식.
 - 2026-09-04: 남기록 — #7·#6-카피 상태 갱신(9/3 회의록·커밋 c1164f2 기준). 9/3 종합이 지적한
