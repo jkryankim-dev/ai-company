@@ -1,13 +1,19 @@
 #!/usr/bin/env node
 // 주간 쿼터 집계 스크립트 (큐 #27 — 2026-10-19 채택, 2026-10-20 이행: 정지표)
 // weekly.json quota 몫(주간 세션 수·직원별 호출 수·기준선 대비)의 마감 수작업 대체.
+// 2026-10-22 확장(큐 #37 — 2026-10-21 채택 이행): 대표 전용 대기 항목 경과일 산출 추가.
+//   원천 org/approvals.md 표 — 실행주체 '대표 전용'·상태 '대기' 행의 최초 상신일(복수일 때
+//   최소값, #12 '2026-08-19(구 #1)·2026-08-26(구 #7)' 방식)에서 종료일 인자까지의 일수.
+//   approvals 표 '대기' 열(29일 등 미갱신 — #37 안건칸 실측)을 대체하는 재계산값이다.
 //
 // 원천: runtime/logs/scheduler.log — 각 세션 '…시작 (YYYY-MM-DD)' 행 아래 종료 시
 //   '…완료. 호출 사용량: {"직원키":호출수,…}' 행(runtime/meeting.mjs:106). JSON 행에 날짜가
 //   없어 직전 '시작' 행의 날짜에 귀속한다. '완료' 행이 없는 진행 중 세션은 제외(확정분만 집계).
 // 사용법: node runtime/quota-weekly.mjs <시작일> <종료일>  (YYYY-MM-DD, 종료일 포함)
 // 검증(이행 시): W8 수동 실측분(세션 6회·직원당 6호출·전체 54, weekly.json quota 노트
-//   2026-10-12문)과 대조 — 2026-10-20 일치 확인.
+//   2026-10-12문)과 대조 — 2026-10-20 일치 확인. 경과일 몫은 10/19 수작업값(weekly.json
+//   ceo_interventions_note·#37 안건칸: 콘솔값 61일·APP_REPO 61일·토큰 28일)과 대조 —
+//   2026-10-22 일치 확인.
 // 실행 경로 전제: /opt/doore main 체크아웃(runtime/docs/ops-env.md §4 — 결과 0건은 경로 오류 의심).
 
 import { readFileSync } from 'node:fs';
@@ -58,3 +64,24 @@ if (!uniform) console.log(`직원별 상세: ${JSON.stringify(perEmployee)}`);
 console.log('세션 목록:');
 for (const x of week) console.log(`  ${x.date} ${x.type}`);
 if (week.length === 0) console.log('  (범위 내 완료 세션 없음)');
+
+// 대표 전용 대기 경과일 (큐 #37 — 원천 org/approvals.md, 기준일 = 종료일 인자)
+const approvalsPath = new URL('../org/approvals.md', import.meta.url);
+const rows = readFileSync(approvalsPath, 'utf8').split('\n');
+const day = (d) => Math.round((Date.parse(d) - Date.parse(end)) / 86400000);
+console.log(`대표 전용 대기 경과일 (원천: org/approvals.md 최초 상신일, 기준일 ${end}):`);
+let waiting = 0;
+for (const line of rows) {
+  const cells = line.split('|').map((c) => c.trim());
+  if (cells.length < 8 || !/^\d+$/.test(cells[1])) continue;
+  const [id, item, firstAsked, , owner, actor, status] = cells.slice(1, 8);
+  if (actor !== '대표 전용' || !status.startsWith('대기')) continue;
+  const dates = firstAsked.match(/\d{4}-\d{2}-\d{2}/g) ?? [];
+  if (dates.length === 0) continue; // 상신일 파싱 불능 행은 원천 결함 — 수작업 대조 대상
+  const oldest = dates.sort()[0];
+  if (oldest > end) continue; // 기준일 이후 상신 행 — 그 시점엔 대기 항목이 아니었다
+  waiting += 1;
+  const label = item.replace(/\s+/g, ' ').slice(0, 40);
+  console.log(`  #${id} ${label}: ${-day(oldest)}일 (${oldest} 상신, 당번 ${owner})`);
+}
+if (waiting === 0) console.log('  (대표 전용 대기 행 없음 — approvals.md 상태·실행주체 열 확인)');
