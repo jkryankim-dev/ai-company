@@ -50,6 +50,10 @@
 - **환경 전제(2026-10-12 추가, 김기획 — 10/8 종합 우선순위 3)**: 매니페스트 실물 확인(#6-기술 몫)은
   APP_REPO 빌드 산출물 전제(approvals#2 대표 전용 대기). 이 저장소 환경 기준은
   `runtime/docs/ops-env.md`(2026-10-09 통과) 인용. 카피 답안(종결 9/10)은 소급 불요.
+- **선행 과업(2026-10-23 신설, 김기획 — 큐 #34 채택(10/22 종합) 이행)**: APP_REPO 도착 전 자체 가능 몫은
+  ① SDK 최신성 pub.dev 조회·AdMob 광고 ID 고지 요건 근거표 작성(웹조회 — data-safety-draft.md 광고 ID
+  답항(#6-기술 확정 대기분)의 근거 보강, APP_REPO 불요). 병합 매니페스트 AD_ID 실물 발췌·답항 확정만
+  APP_REPO 빌드 산출물 후. ① 실행 배정은 종합자 몫.
 
 ### #7 개인정보처리방침 + 콘텐츠 등급 (오운영) — **전제 변화 반영 필요**
 - **목적**: 미확인 등록정보를 대표가 바로 처리할 수 있게 재료를 정리한다
@@ -68,6 +72,10 @@
   .env 빈값 — approvals#2 대표 전용 대기, 박빌드 10/12 재실측). 이 저장소 환경 기준은
   `runtime/docs/ops-env.md`(2026-10-09 통과) 인용. 산출물 제출은 gh 쓰기 토큰 대기 중 이슈 코멘트 대신
   파일 접수 경로(큐 #13·approvals#8 선례).
+- **선행 과업(2026-10-23 신설, 김기획 — 큐 #34 채택(10/22 종합) 이행)**: APP_REPO 도착 전 자체 가능 몫은
+  ① 구글 현재 targetSdk 요건 웹조회값·출처 URL 확보(완료 조건 1항의 웹조회 절반 — APP_REPO 불요)이며
+  ② 검증 스크립트 verify-release.sh(dry-run 포함, QA 통과 10/12)도 이미 선행 완료 상태다.
+  잔여(build.gradle 실측 대조·AAB 빌드·서명·R8 확인)는 전부 APP_REPO 후. 웹조회 ① 실행 배정은 종합자 몫.
 
 ---
 
@@ -249,3 +257,6 @@ gh CLI 쓰기는 토큰(approvals#11, 대표 전용) 확보 전 불가(실측). 
   org/proposals.md 큐 #31 채택(2026-10-21 종합)·strategy-marketing.md:21. 산출물
   projects/beads-sort/d4-content.md 신설 동반. 배정 정본 org/assignments.md 반나절 행·검증 대기 표
   신설 동반. 전략 §출시 주 콘텐츠 계획(D-0~D+7) 접수 완결.
+- 2026-10-23 갱신: 김기획 — 활성 절(#5·#6)에 '선행 과업' 항 추가. 근거: org/proposals.md 큐 #34 채택
+  (2026-10-22 종합 — 값대기 이슈 통째 정지 방지). 소급 대상 4건 중 2건(나머지 2건은
+  runtime/docs/issue-8-status-display-spec.md·runtime/docs/application-answers-console-spec.md).
