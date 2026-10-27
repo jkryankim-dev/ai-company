@@ -4,7 +4,8 @@
 // 2026-10-22 확장(큐 #37 — 2026-10-21 채택 이행): 대표 전용 대기 항목 경과일 산출 추가.
 //   원천 org/approvals.md 표 — 실행주체 '대표 전용'·상태 '대기' 행의 최초 상신일(복수일 때
 //   최소값, #12 '2026-08-19(구 #1)·2026-08-26(구 #7)' 방식)에서 종료일 인자까지의 일수.
-//   approvals 표 '대기' 열(29일 등 미갱신 — #37 안건칸 실측)을 대체하는 재계산값이다.
+//   approvals 표 '대기' 열(2026-10-27 ADR 0010 이행으로 폐지 — 폐지 전 값도 미갱신 과거값이었다)을
+//   대체하는 재계산값이다. 칼럼 폐지에 맞춰 파서 열 위치를 조정했다(2026-10-27 남기록).
 //
 // 원천: runtime/logs/scheduler.log — 각 세션 '…시작 (YYYY-MM-DD)' 행 아래 종료 시
 //   '…완료. 호출 사용량: {"직원키":호출수,…}' 행(runtime/meeting.mjs:106). JSON 행에 날짜가
@@ -73,8 +74,8 @@ console.log(`대표 전용 대기 경과일 (원천: org/approvals.md 최초 상
 let waiting = 0;
 for (const line of rows) {
   const cells = line.split('|').map((c) => c.trim());
-  if (cells.length < 8 || !/^\d+$/.test(cells[1])) continue;
-  const [id, item, firstAsked, , owner, actor, status] = cells.slice(1, 8);
+  if (cells.length < 7 || !/^\d+$/.test(cells[1])) continue;
+  const [id, item, firstAsked, owner, actor, status] = cells.slice(1, 7);
   if (actor !== '대표 전용' || !status.startsWith('대기')) continue;
   const dates = firstAsked.match(/\d{4}-\d{2}-\d{2}/g) ?? [];
   if (dates.length === 0) continue; // 상신일 파싱 불능 행은 원천 결함 — 수작업 대조 대상
