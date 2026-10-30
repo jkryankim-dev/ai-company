@@ -3,6 +3,7 @@
 // 출력: 테스트 일지 묶음 행 실측 근거 양식(test-journal.md 기록 규칙)과 동일 구성의 1행.
 //   일지 양식 부가 항목(최종 커밋)도 함께 출력한다.
 // 근거: org/proposals.md 큐 #12 채택(2026-10-07 종합) 이행 — 검증: 당일 수동 실측 결과와 대조.
+// 2026-10-30 큐 #51 자체 채택(2026-10-29) 이행: '검증 대기 48시간 초과' 항 추가(아래 §5).
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -68,5 +69,27 @@ if (m) {
   } catch (e) { restNote = `측정 불가(${e.message})`; }
 }
 
+// ---- 5. 검증 대기 48시간 상한 초과 행 (org/assignments.md '검증 대기' 표 — 큐 #51) ----
+// 상한은 제출 익일 스탠드업(48시간). 제출일+2일 도래 시점부터 초과로 본다
+// (10/19 제출→10/21 판정을 초과로 센 W10 집계 산식과 동일 기준).
+const asg = fs.readFileSync(path.join(ROOT, 'org/assignments.md'), 'utf8');
+const waitTable = (asg.split('## 검증 대기')[1] || '').split(/\r?\n/);
+const pad = n => String(n).padStart(2, '0');
+const ktoday = `${kst.getFullYear()}-${pad(kst.getMonth() + 1)}-${pad(kst.getDate())}`;
+const over = [];
+for (const line of waitTable) {
+  const c = line.split('|').map(s => s.trim());
+  if (c.length < 5 || !/^\d{4}-\d{2}-\d{2}$/.test(c[3] || '')) continue; // 표 머리행·비날짜 행 제외
+  if (/합격|통과|반려/.test(c[4] || '')) continue; // 판정 완료 행 제외
+  const due = new Date(Date.parse(`${c[3]}T00:00:00Z`) + 2 * 86400e3).toISOString().slice(0, 10);
+  if (ktoday >= due) {
+    const label = c[1].length > 24 ? `${c[1].slice(0, 24)}…` : c[1];
+    over.push(`${label}(제출 ${c[3]})`);
+  }
+}
+const waitNote = over.length
+  ? `검증 대기 48시간 초과 ${over.length}건 — ${over.join(' · ')}`
+  : '검증 대기 48시간 초과 0건';
+
 // ---- 출력 (일지 묶음 행 실측 근거 양식) ----
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}`);
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}`);
