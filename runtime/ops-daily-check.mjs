@@ -4,6 +4,7 @@
 //   일지 양식 부가 항목(최종 커밋)도 함께 출력한다.
 // 근거: org/proposals.md 큐 #12 채택(2026-10-07 종합) 이행 — 검증: 당일 수동 실측 결과와 대조.
 // 2026-10-30 큐 #51 자체 채택(2026-10-29) 이행: '검증 대기 48시간 초과' 항 추가(아래 §5).
+// 2026-11-02 큐 #32 이행(채택 2026-10-22 종합): '직전 세션 스탠드업 산출물 존재 점검' 항 추가(아래 §6).
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -91,5 +92,38 @@ const waitNote = over.length
   ? `검증 대기 48시간 초과 ${over.length}건 — ${over.join(' · ')}`
   : '검증 대기 48시간 초과 0건';
 
+// ---- 6. 직전 세션 스탠드업 산출물 존재 점검 (org/proposals.md 큐 #32) ----
+// 직전 세션 = 금일 이전 중 스탠드업 산출물(메인·부서별 섹션)이 마지막으로 존재한 날.
+// 점검: 메인 회의록 파일 · 섹션 파일 제출(기준선 = 그 직전 세션 제출 부서) · 섹션 파일 상단 각주.
+// 한계: 탐지 단위가 '부서'라 개인 서브섹션 누락은 미탐지(큐 #45 dry-run 차이 ①과 동일 한계).
+const mins = path.join(ROOT, 'meetings/minutes');
+const seen = {};
+for (const f of fs.readdirSync(mins)) {
+  const fm = f.match(/^(\d{4}-\d{2}-\d{2})-standup(?:-([a-z-]+))?\.md$/);
+  if (!fm || fm[1] >= ktoday) continue;
+  (seen[fm[1]] ??= { main: false, slugs: [] });
+  if (fm[2]) seen[fm[1]].slugs.push(fm[2]); else seen[fm[1]].main = true;
+}
+const sdates = Object.keys(seen).sort();
+let standupNote;
+if (!sdates.length) standupNote = '직전 세션 산출물 없음(최초 실행)';
+else {
+  const cur = seen[sdates.at(-1)];
+  const base = sdates.at(-2) ? seen[sdates.at(-2)].slugs : [];
+  const missing = base.filter(s => !cur.slugs.includes(s));
+  const noNote = cur.slugs.filter(s => {
+    const head = fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup-${s}.md`), 'utf8')
+      .split(/\r?\n/).slice(0, 8).join('\n');
+    return !head.includes('부서별 섹션 파일');
+  });
+  const lost = [
+    ...(cur.main ? [] : ['메인 회의록 부재']),
+    ...(missing.length ? [`섹션 미제출 ${missing.join('·')}(직전 세션 제출분)`] : []),
+    ...(noNote.length ? [`상단 각주 없음 ${noNote.join('·')}`] : []),
+  ];
+  standupNote = `직전 세션(${sdates.at(-1)}) 산출물 메인 ${cur.main ? '존재' : '부재'}·섹션 ${cur.slugs.length}부 제출`
+    + (lost.length ? ` — 소실 의심: ${lost.join(' / ')}` : '·이상 없음');
+}
+
 // ---- 출력 (일지 묶음 행 실측 근거 양식) ----
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}`);
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${standupNote}`);
