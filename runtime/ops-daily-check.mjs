@@ -5,6 +5,7 @@
 // 근거: org/proposals.md 큐 #12 채택(2026-10-07 종합) 이행 — 검증: 당일 수동 실측 결과와 대조.
 // 2026-10-30 큐 #51 자체 채택(2026-10-29) 이행: '검증 대기 48시간 초과' 항 추가(아래 §5).
 // 2026-11-02 큐 #32 이행(채택 2026-10-22 종합): '직전 세션 스탠드업 산출물 존재 점검' 항 추가(아래 §6).
+// 2026-11-12 큐 #74③ 자체 채택 이행: '검증 대기 상태값 불일치' 항 추가(아래 §5).
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -73,15 +74,23 @@ if (m) {
 // ---- 5. 검증 대기 48시간 상한 초과 행 (org/assignments.md '검증 대기' 표 — 큐 #51) ----
 // 상한은 제출 익일 스탠드업(48시간). 제출일+2일 도래 시점부터 초과로 본다
 // (10/19 제출→10/21 판정을 초과로 센 W10 집계 산식과 동일 기준).
+// 상태값 규격: 미판정 행은 'QA 대기'(큐 #22 채택 — 배정표 '검증 대기' 절 설명문 인용),
+// 불일치 행을 아래 탐지한다(큐 #74③).
 const asg = fs.readFileSync(path.join(ROOT, 'org/assignments.md'), 'utf8');
 const waitTable = (asg.split('## 검증 대기')[1] || '').split(/\r?\n/);
 const pad = n => String(n).padStart(2, '0');
 const ktoday = `${kst.getFullYear()}-${pad(kst.getMonth() + 1)}-${pad(kst.getDate())}`;
 const over = [];
+const badState = [];
 for (const line of waitTable) {
   const c = line.split('|').map(s => s.trim());
   if (c.length < 5 || !/^\d{4}-\d{2}-\d{2}$/.test(c[3] || '')) continue; // 표 머리행·비날짜 행 제외
-  if (/합격|통과|반려/.test(c[4] || '')) continue; // 판정 완료 행 제외
+  const judged = /합격|통과|반려/.test(c[4] || ''); // 판정 완료(부분 통과 포함) 행
+  if (!judged && !/^QA 대기/.test(c[4] || '')) {
+    const label = c[1].length > 24 ? `${c[1].slice(0, 24)}…` : c[1];
+    badState.push(`${label}(상태 '${c[4] || '(공백)'}')`);
+  }
+  if (judged) continue; // 판정 완료 행은 상한 계산에서 제외
   const due = new Date(Date.parse(`${c[3]}T00:00:00Z`) + 2 * 86400e3).toISOString().slice(0, 10);
   if (ktoday >= due) {
     const label = c[1].length > 24 ? `${c[1].slice(0, 24)}…` : c[1];
@@ -91,6 +100,9 @@ for (const line of waitTable) {
 const waitNote = over.length
   ? `검증 대기 48시간 초과 ${over.length}건 — ${over.join(' · ')}`
   : '검증 대기 48시간 초과 0건';
+const badNote = badState.length
+  ? `검증 대기 상태값 불일치 ${badState.length}건(미판정 'QA 대기' 외 — 큐 #74③) — ${badState.join(' · ')}`
+  : "검증 대기 상태값 불일치 0건(큐 #74③)";
 
 // ---- 6. 직전 세션 스탠드업 산출물 존재 점검 (org/proposals.md 큐 #32) ----
 // 직전 세션 = 금일 이전 중 스탠드업 산출물(메인·부서별 섹션)이 마지막으로 존재한 날.
@@ -126,4 +138,4 @@ else {
 }
 
 // ---- 출력 (일지 묶음 행 실측 근거 양식) ----
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${standupNote}`);
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}`);
