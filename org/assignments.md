@@ -146,7 +146,7 @@ weekly.json qa_judgment_delay_* 키, 원천 analyst.md 마감 규칙).
 | D+2 테스터 안내문 2안 (projects/beads-sort/d2-content.md — 판정 정본은 산출물 최상단 1행) | 김기획 | 2026-10-19 | 합격(2026-10-20, d2-content.md 최상단) |
 | 큐 #23 구현-병합 standup.digest 섹션 병합 지시·테스트 (feat/23-standup-section-merge 88c03c6, node --test 3/3·node --check — dev_1 워크트리 실행) | 최감사 | 2026-10-19 | 통과(2026-10-21, qa-log.md — 검증용 임시 워크트리 독립 재실행 3/3, main 병합은 대표 전용 대기 별건) |
 | D+4 스토어 리스팅 A/B 실험 초안 (projects/beads-sort/d4-content.md — 판정 정본은 산출물 최상단 1행) | 김기획 | 2026-10-22 | 합격(2026-10-22, d4-content.md 최상단) |
-| 큐 #41 #5-스크립트 GitHub PR 발행 초안 (projects/beads-sort/pr-5-verify-script.md §GitHub PR 발행 초안 — gh 명령안·발행 직후 처리 3건, dev_2 e02e4b5. 최상단 검증행 10/12 판정 정본은 그대로) | 최감사 | 2026-10-30 | 대기 |
+| 큐 #41 #5-스크립트 GitHub PR 발행 초안 (projects/beads-sort/pr-5-verify-script.md §GitHub PR 발행 초안 — gh 명령안·발행 직후 처리 3건, dev_2 e02e4b5. 최상단 검증행 10/12 판정 정본은 그대로) | 최감사 | 2026-10-30 | QA 대기(2026-11-13 정정 — 종전 '대기'는 상태값 규격 미적용 오기. 11/12 종합 협조 요청 '제출자 박빌드 몫' 지정 이행. #45 행 정정과 동일 서식) |
 | 출시 후 4주 마케팅 계획 초안 (projects/beads-sort/marketing-4week-plan.md — 판정 정본은 산출물 최상단 1행) | 김기획 | 2026-10-26 | 합격(2026-10-27, marketing-4week-plan.md 최상단) |
 | 큐 #45 88c03c6 섹션 병합 지시 실데이터 dry-run 대조 (meetings/minutes/2026-10-29-digest-merge-dryrun.md 최상단 검증행 — 자체 채택 2026-10-29 규칙 3, 3줄 블록 33건 대조·git 이력 실측 포함) | 최감사 | 2026-10-29 | QA 대기(2026-11-10 정정 — 종전 '검증 대기'는 큐 #22 채택 규칙 미적용 오기. 마찰보고 11/6 오운영 마찰 3 '제출자(이빌드) 몫' 지정 이행) |
 | 큐 #33 비공개 테스트 현황·다음 단계 선택지 상신 문구 초안 (projects/beads-sort/closed-test-next-steps.md — 사규 6조 형식 복사본·선택지 3안·추천 A, 수치 2026-11-03 실측) | 김기획(2026-11-09 지정 — 큐 #63 자체 채택: 선례 부재→PM 지정) | 2026-11-03 | 합격(2026-11-10, closed-test-next-steps.md 최상단=정본. 48시간 상한 초과 — 미지정 구간 11/3~11/9·엔진 401 기인, 판정행 기록) |
@@ -549,3 +549,6 @@ weekly.json qa_judgment_delay_* 키, 원천 analyst.md 마감 규칙).
   근거 상동). approvals.md #14 행 정정 + 첫 수동 묶음 재상신 #대표실 발신(30일 무집행 회복).
   상세는 큐 #71 이행 행·org/proposals.md·org/approvals.md 각 갱신 로그 11/12 참조.
   커밋은 자동 저장 대기.
+- 2026-11-13: 박빌드 — 큐 #41 검증 대기 표 행 상태값 정정('대기'→'QA 대기' — 11/12 종합 협조
+  요청 '제출자 박빌드 몫' 지정 이행, #45 행 정정(11/10)과 동일 서식. ops-daily-check.mjs §5
+  탐지 1호 대상 해소). 커밋은 자동 저장 대기.
