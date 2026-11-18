@@ -7,7 +7,7 @@
 // 2026-11-02 큐 #32 이행(채택 2026-10-22 종합): '직전 세션 스탠드업 산출물 존재 점검' 항 추가(아래 §6).
 // 2026-11-12 큐 #74③ 자체 채택 이행: '검증 대기 상태값 불일치' 항 추가(아래 §5).
 // 2026-11-18 큐 #84·#85 자체 채택 이행: '종합절 오류 감지 시 판정 기한 도래 무판정 큐'·
-//   '배정표↔열린 이슈 담당 불일치' 항 추가(아래 §7).
+//   '배정표↔열린 이슈 담당 불일치' 항 추가(아래 §8).
 // 2026-11-18 큐 #81② 자체 채택 이행: 열린 이슈 전문 org/issues-open.md 매일 덤프(아래 §7).
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
@@ -189,17 +189,21 @@ for (const line of asg.split(/\r?\n/)) {
   const c = line.split('|').map(s => s.trim());
   const nm = (c[1] || '').match(/^#(\d+)/);
   if (!nm) continue;
-  const closed = /종결|종료/.test(c[3] || '') || /종결|종료/.test(c[4] || '');
-  if (closed || !assignByN[nm[1]]) assignByN[nm[1]] = closed ? { closed } : { name: c[2] || '(담당 공란)', closed };
+  // 종결 판정은 행 단위 표식만: 완료 조건 칼럼 선두 '종결 —' 또는 상태칸 '종료 처리 승인'.
+  // (#8처럼 칼럼 본문에 '하위(1) 종결' 서술이 있는 활성 행의 오탐지 방지 — 11/18 수동 대차 정정)
+  const closed = /^종결/.test(c[3] || '') || /종료 처리/.test(c[4] || '');
+  if (!assignByN[nm[1]] || (assignByN[nm[1]].closed && !closed)) {
+    assignByN[nm[1]] = closed ? { closed } : { name: c[2] || '(담당 공란)', closed };
+  }
 }
 const mismatch = [];
 if (openList) {
   for (const g of openList) {
     if (g.assignee) continue; // assignee 있음 — gh 쓰기 확보 전제가 깨져 대상 아님
-    const a = assignByN[String(g.n ?? g.number)];
-    if (!a) mismatch.push(`#${g.n ?? g.number} 정본 행 부재↔open`);
-    else if (a.closed) mismatch.push(`#${g.n ?? g.number} 정본 종결↔open·담당:없음`);
-    else mismatch.push(`#${g.n ?? g.number} 정본 ${a.name}↔담당:없음`);
+    const a = assignByN[String(g.number)];
+    if (!a) mismatch.push(`#${g.number} 정본 행 부재↔open`);
+    else if (a.closed) mismatch.push(`#${g.number} 정본 종결↔open·담당:없음`);
+    else mismatch.push(`#${g.number} 정본 ${a.name}↔담당:없음`);
   }
 }
 const assignNote = openList
