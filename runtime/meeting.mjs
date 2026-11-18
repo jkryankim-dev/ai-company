@@ -75,7 +75,11 @@ async function context() {
     if (!r.ok) return '(이슈 조회 불가 — private 레포이거나 인증 필요)';
     const issues = (await r.json()).filter(i => !i.pull_request);
     if (!issues.length) return '(열린 이슈 없음 — 아직 배정된 일이 없다)';
-    return issues.map(i => `#${i.number} ${i.title} [${(i.labels || []).map(l => l.name).join(',')}] 담당:${i.assignee?.login || '없음'}`).join('\n');
+    // 큐 #81①(2026-11-18 자체 채택): 이슈 본문 첫 10줄 주입 — 사규 2·3조의 목적·완료 조건·검증 방법 열람 전제.
+    return issues.map(i => {
+      const body = (i.body || '').split(/\r?\n/).slice(0, 10).join('\n').trim();
+      return `#${i.number} ${i.title} [${(i.labels || []).map(l => l.name).join(',')}] 담당:${i.assignee?.login || '없음'}${body ? `\n${body}` : ''}`;
+    }).join('\n\n');
   } catch { return '(이슈 조회 실패)'; }
 }
 

@@ -6,6 +6,9 @@
 // 2026-10-30 큐 #51 자체 채택(2026-10-29) 이행: '검증 대기 48시간 초과' 항 추가(아래 §5).
 // 2026-11-02 큐 #32 이행(채택 2026-10-22 종합): '직전 세션 스탠드업 산출물 존재 점검' 항 추가(아래 §6).
 // 2026-11-12 큐 #74③ 자체 채택 이행: '검증 대기 상태값 불일치' 항 추가(아래 §5).
+// 2026-11-18 큐 #84·#85 자체 채택 이행: '종합절 오류 감지 시 판정 기한 도래 무판정 큐'·
+//   '배정표↔열린 이슈 담당 불일치' 항 추가(아래 §7).
+// 2026-11-18 큐 #81② 자체 채택 이행: 열린 이슈 전문 org/issues-open.md 매일 덤프(아래 §7).
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -53,6 +56,7 @@ const consoleNote = hasInput ? '입력 감지(대표 값 도착 — 이관 몫)'
 // ---- 4. 무인증 REST 무변동 조회 (meeting.mjs:62 방식 준용) ----
 const m = (env.GITHUB_REPO || '').match(/([\w.-]+)\/([\w.-]+?)(?:\.git)?$/);
 let restNote = '측정 불가(GITHUB_REPO 미인식)';
+let openList = null; // §7 덤프용 원본 목록(큐 #81②)
 if (m) {
   try {
     const r = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}/issues?state=open&per_page=30`, {
@@ -60,7 +64,9 @@ if (m) {
     });
     if (!r.ok) restNote = `측정 불가(HTTP ${r.status})`;
     else {
-      const open = (await r.json()).filter(i => !i.pull_request).length;
+      const list = (await r.json()).filter(i => !i.pull_request);
+      const open = list.length;
+      openList = list;
       const stateFile = path.join(ROOT, 'runtime/state/ops-daily.json');
       const prev = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile, 'utf8')) : null;
       restNote = prev
@@ -137,5 +143,68 @@ else {
     + (lost.length ? ` — 소실 의심: ${lost.join(' / ')}` : '·이상 없음');
 }
 
+// ---- 7. 열린 이슈 전문 덤프 (org/issues-open.md — 큐 #81②, 2026-11-18) ----
+// 사실 확인 인용용 스냅숏(사규 2·3조 이슈 본문 열람 전제). 배정 정본은 org/assignments.md —
+// 이 파일은 정본 아님(gh 쓰기 불능 기간 운용, approvals#11 대기 — 큐 #87 방향과 동일 전제).
+let dumpNote = '열린 이슈 덤프 불가(REST 조회 실패 — 큐 #81②)';
+if (openList) {
+  const dump = [
+    '# 열린 이슈 전문 (자동 덤프)',
+    '',
+    `- 기준 ${ktoday} ${pad(kst.getHours())}:${pad(kst.getMinutes())} KST · open ${openList.length}건 · 무인증 REST per_page=30 상한`,
+    '- 사실 확인 인용용 스냅숏 — 배정 정본은 org/assignments.md (runtime/ops-daily-check.mjs §7, 큐 #81②)',
+    '',
+    ...openList.flatMap(i => [
+      '---', '',
+      `## #${i.number} ${i.title}`, '',
+      `[${(i.labels || []).map(l => l.name).join(',') || '라벨 없음'}] 담당:${i.assignee?.login || '없음'}`, '',
+      `${i.body || '(본문 없음)'}`, '',
+    ]),
+  ].join('\n');
+  fs.writeFileSync(path.join(ROOT, 'org/issues-open.md'), dump);
+  dumpNote = `열린 이슈 덤프 ${openList.length}건(org/issues-open.md — 큐 #81②)`;
+}
+
+// ---- 8. 종합절 오류 감지 + 배정표↔열린 이슈 담당 불일치 (org/proposals.md 큐 #84·#85, 2026-11-18) ----
+// #84: 직전 세션 병합본 '## 종합' 절에 오류(401 등)가 남아 있으면 종합 불능으로 보고하고 판정 기한
+// (제출일+48시간) 도래 무판정 큐를 나열한다(운영 규칙 3 재실측 근거 — 수동 대조는 §5와 동일 몫).
+// #85: 배정 정본(assignments.md 상단 표) 활성 행 담당 ↔ 열린 이슈 assignee('담당:없음' 표기) 대조.
+const summSec = sdates.length
+  ? (fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup.md`), 'utf8').split('## 종합')[1] || '')
+  : '';
+const summErr = /실패|401/.test(summSec);
+const props = fs.readFileSync(path.join(ROOT, 'org/proposals.md'), 'utf8');
+const dueQ = [];
+for (const line of props.split(/\r?\n/)) {
+  const c = line.split('|').map(s => s.trim());
+  if (!/^\d+$/.test(c[1] || '') || !/^\d{4}-\d{2}-\d{2}$/.test(c[5] || '') || c[6]) continue;
+  if (ktoday >= c[5]) dueQ.push(`#${c[1]}`);
+}
+const synthNote = (sdates.length ? `직전 종합절(${sdates.at(-1)}) ` : '직전 종합절 부재 ')
+  + (summErr ? '오류 감지 — 종합 불능' : '오류 없음')
+  + `, 판정 기한 도래 무판정 큐 ${dueQ.length}건${dueQ.length ? `(${dueQ.join('·')})` : ''}`;
+const assignByN = {}; // 상단 배정 표만 — '## ' 절(검증 대기 등) 도달 시 중단, 분할 행은 활성 행 우선
+for (const line of asg.split(/\r?\n/)) {
+  if (line.startsWith('## ')) break;
+  const c = line.split('|').map(s => s.trim());
+  const nm = (c[1] || '').match(/^#(\d+)/);
+  if (!nm) continue;
+  const closed = /종결|종료/.test(c[3] || '') || /종결|종료/.test(c[4] || '');
+  if (closed || !assignByN[nm[1]]) assignByN[nm[1]] = closed ? { closed } : { name: c[2] || '(담당 공란)', closed };
+}
+const mismatch = [];
+if (openList) {
+  for (const g of openList) {
+    if (g.assignee) continue; // assignee 있음 — gh 쓰기 확보 전제가 깨져 대상 아님
+    const a = assignByN[String(g.n ?? g.number)];
+    if (!a) mismatch.push(`#${g.n ?? g.number} 정본 행 부재↔open`);
+    else if (a.closed) mismatch.push(`#${g.n ?? g.number} 정본 종결↔open·담당:없음`);
+    else mismatch.push(`#${g.n ?? g.number} 정본 ${a.name}↔담당:없음`);
+  }
+}
+const assignNote = openList
+  ? `배정표↔열린 이슈 담당 불일치 ${mismatch.length}건(큐 #85)${mismatch.length ? ` — ${mismatch.join(' · ')}` : ''}`
+  : '배정표↔열린 이슈 담당 불일치 측정 불가(REST 조회 실패 — 큐 #85)';
+
 // ---- 출력 (일지 묶음 행 실측 근거 양식) ----
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}`);
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${dumpNote}, ${synthNote}, ${assignNote}`);
