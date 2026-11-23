@@ -8,7 +8,12 @@
 // 2026-11-12 큐 #74③ 자체 채택 이행: '검증 대기 상태값 불일치' 항 추가(아래 §5).
 // 2026-11-18 큐 #84·#85 자체 채택 이행: '종합절 오류 감지 시 판정 기한 도래 무판정 큐'·
 //   '배정표↔열린 이슈 담당 불일치' 항 추가(아래 §8).
-// 2026-11-18 큐 #81② 자체 채택 이행: 열린 이슈 전문 org/issues-open.md 매일 덤프(아래 §7).
+// 2026-11-18 큐 #81② 자체 채택 이행: 열린 이슈 전문 org/issues-open.md 매일 덠프(아래 §7).
+// 2026-11-23 큐 #98·#99 자체 채택 이행: '마찰보고 예고 처방 미접수' 감지 항 추가(아래 §8)·
+//   §5·§8 감지 그룹 전일 스냅숏 대비 무변동 압축(runtime/state/ops-daily-snap.json 보관).
+// 2026-11-23 큐 #96·#97② 자체 채택 이행: '기한 미도래 무판정 큐' 나열 추가(판정칸 공란 전체를
+//   1회 출력으로)·approvals #14 '직전 재상신 실행일' 경과 탐지(주 1회 규정 초과 시 — 아래 §8).
+// 2026-11-23 큐 #91 자체 채택 이행: §6 섹션 파일명 정규식 슬러그부 한글 허용(개인별 섹션 파일 대응).
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -103,21 +108,37 @@ for (const line of waitTable) {
     over.push(`${label}(제출 ${c[3]})`);
   }
 }
-const waitNote = over.length
-  ? `검증 대기 48시간 초과 ${over.length}건 — ${over.join(' · ')}`
-  : '검증 대기 48시간 초과 0건';
-const badNote = badState.length
-  ? `검증 대기 상태값 불일치 ${badState.length}건(미판정 'QA 대기' 외 — 큐 #74③) — ${badState.join(' · ')}`
-  : "검증 대기 상태값 불일치 0건(큐 #74③)";
+// ---- 5b. 감지 그룹 전일 스냅숏 대비 압축 (org/proposals.md 큐 #99, 2026-11-23) ----
+// §5·§8 감지 그룹(초과·상태값 불일치·무판정·담당 불일치)을 직전 실행 스냅숏과 대비해 변화 행만
+// 상세 출력하고 무변동 그룹은 '잔여 N건(무변동)' 1행으로 압축한다. 산식(초과 판정·기한 계산·대조
+// 로직) 불변 — 출력 양식만. 스냅숏은 runtime/state/ops-daily-snap.json(gitignore)에 보관.
+const snapFile = path.join(ROOT, 'runtime/state/ops-daily-snap.json');
+const prevSnap = fs.existsSync(snapFile) ? JSON.parse(fs.readFileSync(snapFile, 'utf8')) : null;
+const cmp = (label, cur, key) => {
+  const prev = prevSnap && Array.isArray(prevSnap[key]) ? prevSnap[key] : null;
+  if (!prev) return `${label} ${cur.length}건 — ${cur.join(' · ')}(스냅숏 기준 없음 — 큐 #99 첫 회)`;
+  const added = cur.filter(x => !prev.includes(x));
+  const gone = prev.filter(x => !cur.includes(x));
+  const stay = cur.length - added.length;
+  const parts = [];
+  if (added.length) parts.push(`신규 편입 ${added.length}: ${added.join(' · ')}`);
+  if (gone.length) parts.push(`해소 ${gone.length}: ${gone.join(' · ')}`);
+  if (stay) parts.push(`잔여 ${stay}건(무변동)`);
+  if (!parts.length) parts.push('0건(전일 대비 변화 없음)');
+  return `${label} ${cur.length}건 — ${parts.join(' · ')}`;
+};
+const waitNote = cmp('검증 대기 48시간 초과', over, 'over');
+const badNote = cmp('검증 대기 상태값 불일치(큐 #74③)', badState, 'bad');
 
 // ---- 6. 직전 세션 스탠드업 산출물 존재 점검 (org/proposals.md 큐 #32) ----
 // 직전 세션 = 금일 이전 중 스탠드업 산출물(메인·부서별 섹션)이 마지막으로 존재한 날.
 // 점검: 메인 회의록 파일 · 섹션 파일 제출(기준선 = 그 직전 세션 제출 부서) · 섹션 파일 상단 각주.
-// 한계: 탐지 단위가 '부서'라 개인 서브섹션 누락은 미탐지(큐 #45 dry-run 차이 ①과 동일 한계).
+// 한계: 섹션 '미제출' 탐지 단위는 부서(큐 #45 dry-run 차이 ①과 동일 한계) — 제출된 파일 내
+// 개인 서브섹션의 병합본 공란은 아래 #102② 탐지로 보완한다.
 const mins = path.join(ROOT, 'meetings/minutes');
 const seen = {};
 for (const f of fs.readdirSync(mins)) {
-  const fm = f.match(/^(\d{4}-\d{2}-\d{2})-standup(?:-([a-z-]+))?\.md$/);
+  const fm = f.match(/^(\d{4}-\d{2}-\d{2})-standup(?:-([a-z가-힣-]+))?\.md$/);
   if (!fm || fm[1] >= ktoday) continue;
   (seen[fm[1]] ??= { main: false, slugs: [] });
   if (fm[2]) seen[fm[1]].slugs.push(fm[2]); else seen[fm[1]].main = true;
@@ -134,13 +155,30 @@ else {
       .split(/\r?\n/).slice(0, 8).join('\n');
     return !head.includes('부서별 섹션 파일');
   });
+  // 큐 #102②(2026-11-23): 병합본 서브섹션 공란(원문 존재) 탐지 — 원문 섹션 파일의 개인
+  // 서브섹션(## 이름)이 메인 회의록에 없으면 나열한다(가이드 §3 7번 즉시 편입 대상의 자동 탐지).
+  const blank = [];
+  if (cur.main) {
+    const mainHeads = new Set(
+      fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup.md`), 'utf8')
+        .split(/\r?\n/).filter(l => l.startsWith('## '))
+        .map(l => l.slice(3).split(/\s*[(:：]/)[0].trim())
+    );
+    for (const s of cur.slugs) {
+      blank.push(...fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup-${s}.md`), 'utf8')
+        .split(/\r?\n/).filter(l => /^## [^\s(（:：]/.test(l))
+        .map(l => l.slice(3).split(/\s*[(:：]/)[0].trim()).filter(n => n)
+        .filter(n => !mainHeads.has(n)));
+    }
+  }
   const lost = [
     ...(cur.main ? [] : ['메인 회의록 부재']),
     ...(missing.length ? [`섹션 미제출 ${missing.join('·')}(직전 세션 제출분)`] : []),
     ...(noNote.length ? [`상단 각주 없음 ${noNote.join('·')}`] : []),
   ];
   standupNote = `직전 세션(${sdates.at(-1)}) 산출물 메인 ${cur.main ? '존재' : '부재'}·섹션 ${cur.slugs.length}부 제출`
-    + (lost.length ? ` — 소실 의심: ${lost.join(' / ')}` : '·이상 없음');
+    + (lost.length ? ` — 소실 의심: ${lost.join(' / ')}` : '·이상 없음')
+    + (cur.main ? `·병합본 공란(원문 존재) ${blank.length}건${blank.length ? ` — ${blank.join('·')}` : ''}(큐 #102②)` : '');
 }
 
 // ---- 7. 열린 이슈 전문 덤프 (org/issues-open.md — 큐 #81②, 2026-11-18) ----
@@ -180,9 +218,31 @@ for (const line of props.split(/\r?\n/)) {
   if (!/^\d+$/.test(c[1] || '') || !/^\d{4}-\d{2}-\d{2}$/.test(c[5] || '') || c[6]) continue;
   if (ktoday >= c[5]) dueQ.push(`#${c[1]}`);
 }
+// 큐 #96(2026-11-23): 기한 미도래 무판정 행(번호·기한)도 나열해 판정칸 공란 전체를 1회 출력으로
+// 제공(일일 수동 보충 폐지 — analyst.md 2026-11-20 조항의 출력 원천).
+const pendQ = [];
+for (const line of props.split(/\r?\n/)) {
+  const c = line.split('|').map(s => s.trim());
+  if (!/^\d+$/.test(c[1] || '') || !/^\d{4}-\d{2}-\d{2}$/.test(c[5] || '') || c[6]) continue;
+  if (ktoday < c[5]) pendQ.push(`#${c[1]}(기한 ${c[5].slice(5)})`);
+}
+// 큐 #97②(2026-11-23): approvals #14 상주 표기 '직전 재상신 실행일'(#97①) 경과 탐지 — 주 1회
+// 규정(7일) 초과 시 1행. 표기 부재도 1행으로 드러낸다(원천 결측 감지 — ops-env.md §4 '0건=경로 의심' 준용).
+const rm = fs.readFileSync(path.join(ROOT, 'org/approvals.md'), 'utf8')
+  .match(/직전 재상신 실행일: (\d{4}-\d{2}-\d{2})/);
+let resentNote;
+if (!rm) resentNote = `직전 재상신 실행일 표기 부재(approvals #14 — 큐 #97②)`;
+else {
+  const days = Math.round((Date.parse(`${ktoday}T00:00:00Z`) - Date.parse(`${rm[1]}T00:00:00Z`)) / 86400e3);
+  resentNote = days > 7
+    ? `직전 묶음 재상신 실행일(${rm[1]}) 경과 ${days}일 — 주 1회 규정 초과(큐 #97②)`
+    : `직전 재상신 실행일 ${rm[1]}(${days}일 — 규정 내, 큐 #97②)`;
+}
 const synthNote = (sdates.length ? `직전 종합절(${sdates.at(-1)}) ` : '직전 종합절 부재 ')
   + (summErr ? '오류 감지 — 종합 불능' : '오류 없음')
-  + `, 판정 기한 도래 무판정 큐 ${dueQ.length}건${dueQ.length ? `(${dueQ.join('·')})` : ''}`;
+  + `, ` + cmp(`판정 기한 도래 무판정 큐`, dueQ, 'dueQ')
+  + `, ` + cmp(`기한 미도래 무판정 큐`, pendQ, 'pendQ')
+  + `, ${resentNote}`;
 const assignByN = {}; // 상단 배정 표만 — '## ' 절(검증 대기 등) 도달 시 중단, 분할 행은 활성 행 우선
 for (const line of asg.split(/\r?\n/)) {
   if (line.startsWith('## ')) break;
@@ -207,8 +267,45 @@ if (openList) {
   }
 }
 const assignNote = openList
-  ? `배정표↔열린 이슈 담당 불일치 ${mismatch.length}건(큐 #85)${mismatch.length ? ` — ${mismatch.join(' · ')}` : ''}`
+  ? cmp(`배정표↔열린 이슈 담당 불일치(큐 #85)`, mismatch, 'mismatch')
   : '배정표↔열린 이슈 담당 불일치 측정 불가(REST 조회 실패 — 큐 #85)';
 
-// ---- 출력 (일지 묶음 행 실측 근거 양식) ----
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${dumpNote}, ${synthNote}, ${assignNote}`);
+// ---- 8b. 마찰보고·주간결과 '다음 세션 큐 접수' 예고 미접수 감지 (org/proposals.md 큐 #98, 2026-11-23) ----
+// 직전 영업일(두 보고서 유형 파일이 존재하는 직전 날짜) 보고서에 '(차기|다음|M/D) 세션 … 접수' 예고가
+// 있는데 금일 proposals 갱신 로그에 해당 제출자의 접수 행이 없으면 미접수로 출력한다(세션 프롬프트·
+// 회고 가동과 무관하게 매 영업일 발동 — #3 상시 루틴에 실린 장치). 예고 판별: 행내 '미접수' 표기
+// (#67① 처방 규격 준용 — 제목·인용문의 '다음 세션 큐 접수' 언급은 제외) + '세션' 뒤 6자 이내 '접수'.
+// 과거 공약 인용("차기 세션(11/17) 큐 접수한다"(같은 파일:196) 식)은 세션 뒤 날짜 괄호로 6자 초과라
+// 제외된다. 한계: 줄바꿈에 걸린 예고 미탐지·병렬 세션 진행 중 인원은 측정 시점 기준 미접수로 출력.
+const rptByDate = {};
+for (const f of fs.readdirSync(mins)) {
+  const rm = f.match(/^(\d{4}-\d{2}-\d{2})-(?:마찰보고|주간결과)-(.+)\.md$/);
+  if (!rm || rm[1] >= ktoday) continue;
+  (rptByDate[rm[1]] ??= []).push({ who: rm[2].replace(/\.md$/, ''), file: f });
+}
+const rdates = Object.keys(rptByDate).sort();
+let promiseNote;
+if (!rdates.length) promiseNote = '마찰보고 예고 미접수 측정 불가(보고서 파일 부재 — 큐 #98)';
+else {
+  const rd = rdates.at(-1);
+  const logToday = props.split(/\r?\n/).filter(l => l.includes(`, ${ktoday} —`) && l.includes('접수'));
+  const missWho = [];
+  for (const { who, file } of rptByDate[rd]) {
+    const promised = fs.readFileSync(path.join(mins, file), 'utf8').split(/\r?\n/).some(l =>
+      l.includes('미접수') && /(?:차기|다음|\d{1,2}\/\d{1,2})\s*세션.{0,6}접수/.test(l)
+      && !/같은 파일:\d+/.test(l));
+    if (promised && !logToday.some(l => l.includes(`갱신: ${who},`))) missWho.push(who);
+  }
+  promiseNote = missWho.length
+    ? `마찰보고 예고 처방 미접수 ${missWho.length}건(${rd} 보고 — ${missWho.join('·')})(큐 #98)`
+    : `마찰보고 예고 처방 미접수 0건(${rd} 보고 기준 — 큐 #98)`;
+}
+
+// ---- 출력 (일지 묶음 행 실측 근거 양식) + 스냅숏 기록(큐 #99) ----
+fs.writeFileSync(snapFile, JSON.stringify({
+  date: ktoday,
+  over, bad: badState, dueQ, pendQ,
+  // REST 실패 시 mismatch=[]는 측정 부재 — 스냅숏은 직전 실측값을 유지(다음 실행 대비 보존)
+  mismatch: openList ? mismatch : (prevSnap && Array.isArray(prevSnap.mismatch) ? prevSnap.mismatch : []),
+}));
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${dumpNote}, ${synthNote}, ${assignNote}, ${promiseNote}`);
