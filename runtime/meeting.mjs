@@ -119,4 +119,17 @@ fs.mkdirSync(p('meetings', 'minutes'), { recursive: true });
 fs.writeFileSync(p('meetings', 'minutes', `${today()}-${KIND}.md`),
   `# ${spec.title} (${today()})\n\n## 현황\n\`\`\`\n${ctx}\n\`\`\`\n\n## 부서별 보고\n\n${digest}\n\n## 종합\n\n${sum.ok ? sum.text : '(실패: ' + sum.error + ')'}\n`);
 
+// 큐 #94(2026-11-23): 세션 종료 요약에 '종합 절' 상태 노출. 판정 N건 = proposals 큐 표 무판정 행 중
+// 판정 기한(제출일+48시간)이 금일 도래한 건수(종합 성공 시 종합자 판정 반영 후 잔여 ≈ 0, 실패(401 등) 시
+// 적체가 그대로 노출 — '세션 정상'과 '판정 채널 사망'의 동시 참 해소). 종합 양 경로 실패 시 종료 코드도
+// 0이 아니다(scheduler 종료 행 전파 — 소비자는 로그 1행뿐, 재시도 로직 없음).
+const props94 = fs.readFileSync(p('org', 'proposals.md'), 'utf8');
+const t94 = today();
+let dueN94 = 0;
+for (const line of props94.split(/\r?\n/)) {
+  const c = line.split('|').map(s => s.trim());
+  if (/^\d+$/.test(c[1] || '') && /^\d{4}-\d{2}-\d{2}$/.test(c[5] || '') && !c[6] && t94 >= c[5]) dueN94++;
+}
+log(`종합 절: ${sum.ok ? '성공' : `실패(${sum.error || '요약 생성 불능'})`} — 판정 기한 도래 무판정 ${dueN94}건`);
 log('완료. 호출 사용량:', JSON.stringify(usage()));
+if (!sum.ok) process.exit(2);
