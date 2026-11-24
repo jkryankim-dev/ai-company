@@ -157,18 +157,21 @@ else {
   });
   // 큐 #102②(2026-11-23): 병합본 서브섹션 공란(원문 존재) 탐지 — 원문 섹션 파일의 개인
   // 서브섹션(## 이름)이 메인 회의록에 없으면 나열한다(가이드 §3 7번 즉시 편입 대상의 자동 탐지).
+  // 2026-11-24 정정(남기록): 헤더 존재 유무만 보아 '헤더 있음·본문 공란'(2026-11-23 정지표 사례)이
+  // 미탐지였다 — 서브섹션별 본문 비어 있지 않은 행 수까지 세어 0행이면 공란으로 탐지한다.
   const blank = [];
   if (cur.main) {
-    const mainHeads = new Set(
-      fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup.md`), 'utf8')
-        .split(/\r?\n/).filter(l => l.startsWith('## '))
-        .map(l => l.slice(3).split(/\s*[(:：]/)[0].trim())
-    );
+    const mainBody = {};
+    let head = null;
+    for (const l of fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup.md`), 'utf8').split(/\r?\n/)) {
+      if (l.startsWith('## ')) head = l.slice(3).split(/\s*[(:：]/)[0].trim();
+      else if (head && l.trim()) mainBody[head] = (mainBody[head] || 0) + 1;
+    }
     for (const s of cur.slugs) {
       blank.push(...fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup-${s}.md`), 'utf8')
         .split(/\r?\n/).filter(l => /^## [^\s(（:：]/.test(l))
         .map(l => l.slice(3).split(/\s*[(:：]/)[0].trim()).filter(n => n)
-        .filter(n => !mainHeads.has(n)));
+        .filter(n => !mainBody[n]));
     }
   }
   const lost = [
