@@ -1,6 +1,6 @@
 # 열린 이슈 전문 (자동 덤프)
 
-- 기준 2026-11-25 09:04 KST · open 8건 · 무인증 REST per_page=30 상한
+- 기준 2026-11-25 09:08 KST · open 8건 · 무인증 REST per_page=30 상한
 - 사실 확인 인용용 스냅숏 — 배정 정본은 org/assignments.md (runtime/ops-daily-check.mjs §7, 큐 #81②)
 
 ---

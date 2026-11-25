@@ -14,6 +14,7 @@
 // 2026-11-23 큐 #96·#97② 자체 채택 이행: '기한 미도래 무판정 큐' 나열 추가(판정칸 공란 전체를
 //   1회 출력으로)·approvals #14 '직전 재상신 실행일' 경과 탐지(주 1회 규정 초과 시 — 아래 §8).
 // 2026-11-23 큐 #91 자체 채택 이행: §6 섹션 파일명 정규식 슬러그부 한글 허용(개인별 섹션 파일 대응).
+// 2026-11-25 큐 #108① 자체 채택 이행: §8 '규칙 3 요건 성립(기한 경과+판정칸 공란)' 태그 행 추가.
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -246,6 +247,12 @@ const synthNote = (sdates.length ? `직전 종합절(${sdates.at(-1)}) ` : '직�
   + `, ` + cmp(`판정 기한 도래 무판정 큐`, dueQ, 'dueQ')
   + `, ` + cmp(`기한 미도래 무판정 큐`, pendQ, 'pendQ')
   + `, ${resentNote}`;
+// 큐 #108①(2026-11-25): '규칙 3 요건 성립(기한 경과+판정칸 공란)' 태그 — dueQ 집합을 자체 채택
+// 발동 요건 관점으로 상시 노출한다(종합절 오류 유무와 무관 — #84는 오류 감지 조건부 나열).
+// 제출자 발견까지 1~2일 걸리던 규칙 3 발동 지연 처방(2026-11-20 마찰보고 마찰 2).
+const rule3Note = dueQ.length
+  ? `규칙 3 요건 성립(기한 경과+판정칸 공란) ${dueQ.length}건(${dueQ.join('·')}) — 자체 채택 발동 대상(큐 #108①)`
+  : `규칙 3 요건 성립 0건(큐 #108①)`;
 const assignByN = {}; // 상단 배정 표만 — '## ' 절(검증 대기 등) 도달 시 중단, 분할 행은 활성 행 우선
 for (const line of asg.split(/\r?\n/)) {
   if (line.startsWith('## ')) break;
@@ -311,4 +318,4 @@ fs.writeFileSync(snapFile, JSON.stringify({
   // REST 실패 시 mismatch=[]는 측정 부재 — 스냅숏은 직전 실측값을 유지(다음 실행 대비 보존)
   mismatch: openList ? mismatch : (prevSnap && Array.isArray(prevSnap.mismatch) ? prevSnap.mismatch : []),
 }));
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${dumpNote}, ${synthNote}, ${assignNote}, ${promiseNote}`);
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${dumpNote}, ${synthNote}, ${rule3Note}, ${assignNote}, ${promiseNote}`);
