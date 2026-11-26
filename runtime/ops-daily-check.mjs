@@ -15,6 +15,10 @@
 //   1회 출력으로)·approvals #14 '직전 재상신 실행일' 경과 탐지(주 1회 규정 초과 시 — 아래 §8).
 // 2026-11-23 큐 #91 자체 채택 이행: §6 섹션 파일명 정규식 슬러그부 한글 허용(개인별 섹션 파일 대응).
 // 2026-11-25 큐 #108① 자체 채택 이행: §8 '규칙 3 요건 성립(기한 경과+판정칸 공란)' 태그 행 추가.
+// 2026-11-26 큐 #116 자체 채택 이행: §8 '대표 전용 대기 전제 무변경 확인'(approvals #14 미병합
+//   팁 증감 + APP_REPO 빈값 여부) 항 추가(아래 §8).
+// 2026-11-26 큐 #117·#118 자체 채택 이행: §6 병합본 역방향(병합본 기재·원문 부재) 탐지 + 점검 대상
+//   주간 병합본(allhands — 원문 주간결과 개인 파일) 확장.
 // 이전 REST 측정값은 runtime/state/ops-daily.json(gitignore)에 보관해 무변동/변동을 판정한다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -137,6 +141,9 @@ const badNote = cmp('검증 대기 상태값 불일치(큐 #74③)', badState, '
 // 한계: 섹션 '미제출' 탐지 단위는 부서(큐 #45 dry-run 차이 ①과 동일 한계) — 제출된 파일 내
 // 개인 서브섹션의 병합본 공란은 아래 #102② 탐지로 보완한다.
 const mins = path.join(ROOT, 'meetings/minutes');
+// 직원 명부(가이드 §1 부서 슬러그 표 소속 9인 — org/standup-section-guide.md). 병합본의 직원
+// 서브섹션 판별에 쓴다(큐 #117·#118, 2026-11-26).
+const STAFF = ['김기획', '박빌드', '이빌드', '오운영', '서카피', '최감사', '정지표', '남기록', '한실장'];
 const seen = {};
 for (const f of fs.readdirSync(mins)) {
   const fm = f.match(/^(\d{4}-\d{2}-\d{2})-standup(?:-([a-z가-힣-]+))?\.md$/);
@@ -161,19 +168,24 @@ else {
   // 2026-11-24 정정(남기록): 헤더 존재 유무만 보아 '헤더 있음·본문 공란'(2026-11-23 정지표 사례)이
   // 미탐지였다 — 서브섹션별 본문 비어 있지 않은 행 수까지 세어 0행이면 공란으로 탐지한다.
   const blank = [];
+  let ghost = [];
   if (cur.main) {
     const mainBody = {};
+    const mainHeads = new Set();
     let head = null;
     for (const l of fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup.md`), 'utf8').split(/\r?\n/)) {
-      if (l.startsWith('## ')) head = l.slice(3).split(/\s*[(:：]/)[0].trim();
+      if (l.startsWith('## ')) { head = l.slice(3).split(/\s*[(:：]/)[0].trim(); mainHeads.add(head); }
       else if (head && l.trim()) mainBody[head] = (mainBody[head] || 0) + 1;
     }
-    for (const s of cur.slugs) {
-      blank.push(...fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup-${s}.md`), 'utf8')
+    const filed = new Set(cur.slugs.flatMap(s =>
+      fs.readFileSync(path.join(mins, `${sdates.at(-1)}-standup-${s}.md`), 'utf8')
         .split(/\r?\n/).filter(l => /^## [^\s(（:：]/.test(l))
-        .map(l => l.slice(3).split(/\s*[(:：]/)[0].trim()).filter(n => n)
-        .filter(n => !mainBody[n]));
-    }
+        .map(l => l.slice(3).split(/\s*[(:：]/)[0].trim()).filter(n => n)));
+    blank.push(...[...filed].filter(n => !mainBody[n]));
+    // 큐 #117(2026-11-26): 병합본 역방향 오기 탐지 — 메인 회의록에 직원 서브섹션이 기재됐는데(라이브
+    // digest 수집분 포함) 당일 섹션 파일(원문)에 그 서브섹션이 부재하면 나열한다. 원문 없는 수집분은
+    // 실측 대조가 불가하다(2026-11-23 병합본에 8월 시점 보고가 재수록된 사례 — #102②는 역방향 공백).
+    ghost = STAFF.filter(n => mainHeads.has(n) && !filed.has(n));
   }
   const lost = [
     ...(cur.main ? [] : ['메인 회의록 부재']),
@@ -182,7 +194,33 @@ else {
   ];
   standupNote = `직전 세션(${sdates.at(-1)}) 산출물 메인 ${cur.main ? '존재' : '부재'}·섹션 ${cur.slugs.length}부 제출`
     + (lost.length ? ` — 소실 의심: ${lost.join(' / ')}` : '·이상 없음')
-    + (cur.main ? `·병합본 공란(원문 존재) ${blank.length}건${blank.length ? ` — ${blank.join('·')}` : ''}(큐 #102②)` : '');
+    + (cur.main ? `·병합본 공란(원문 존재) ${blank.length}건${blank.length ? ` — ${blank.join('·')}` : ''}(큐 #102②)` : '')
+    + (cur.main ? `·병합본 기재·원문 부재 ${ghost.length}건${ghost.length ? ` — ${ghost.join('·')}` : ''}(내용 검증 불가 — 큐 #117)` : '');
+}
+
+// 큐 #118(2026-11-26): §6 점검 대상 확장 — 주간 단위 병합본. allhands 병합본(-allhands.md)이
+// 주간결과 개인 원문(-주간결과-{이름}.md)의 병합처다(별도 '-주간결과.md' 병합 파일은 부재 —
+// 2026-11-26 실측). 공란·누락(원문 존재·병합본 서브섹션 부재/본문 0행)과 역방향(#117과 동일 산식)을
+// 직전 allhands에 적용한다(기록관 복구 범위 정렬 — 가이드 §3 7번·librarian.md, 큐 #82).
+const ahDates = fs.readdirSync(mins)
+  .map(f => f.match(/^(\d{4}-\d{2}-\d{2})-allhands\.md$/))
+  .filter(Boolean).map(m => m[1]).filter(d => d < ktoday).sort();
+let weeklyNote = '주간 병합본 점검 대상 부재(직전 allhands 파일 없음 — 큐 #118)';
+if (ahDates.length) {
+  const ad = ahDates.at(-1);
+  const ahBody = {};
+  const ahHeads = new Set();
+  let ah = null;
+  for (const l of fs.readFileSync(path.join(mins, `${ad}-allhands.md`), 'utf8').split(/\r?\n/)) {
+    if (l.startsWith('## ')) { ah = l.slice(3).split(/\s*[(:：]/)[0].trim(); ahHeads.add(ah); }
+    else if (ah && l.trim()) ahBody[ah] = (ahBody[ah] || 0) + 1;
+  }
+  const filedW = new Set(fs.readdirSync(mins)
+    .map(f => f.match(new RegExp(`^${ad}-주간결과-(.+)\\.md$`)))
+    .filter(Boolean).map(m => m[1]));
+  const missW = STAFF.filter(n => filedW.has(n) && !(ahBody[n] > 0));
+  const ghostW = STAFF.filter(n => ahHeads.has(n) && !filedW.has(n));
+  weeklyNote = `주간 병합본(${ad} allhands) 점검 — 공란·누락 ${missW.length}건${missW.length ? `(${missW.join('·')})` : ''}·역방향 ${ghostW.length}건${ghostW.length ? `(${ghostW.join('·')})` : ''}(큐 #118)`;
 }
 
 // ---- 7. 열린 이슈 전문 덤프 (org/issues-open.md — 큐 #81②, 2026-11-18) ----
@@ -253,6 +291,33 @@ const synthNote = (sdates.length ? `직전 종합절(${sdates.at(-1)}) ` : '직�
 const rule3Note = dueQ.length
   ? `규칙 3 요건 성립(기한 경과+판정칸 공란) ${dueQ.length}건(${dueQ.join('·')}) — 자체 채택 발동 대상(큐 #108①)`
   : `규칙 3 요건 성립 0건(큐 #108①)`;
+// 큐 #116(2026-11-26): '대표 전용 대기 전제 무변경 확인' — approvals #14 등록 팁 대비 미병합
+// 증감(행 파싱+merge-base)·APP_REPO 빈값 여부를 매일 자동 실측한다. 근거: 대기 전제 4종(QA 판정·
+// APP_REPO·미병합 스택·401)을 매 세션 수동 재실측하는 비용이 값 무변경과 무관하게 상수인 문제
+// (2026-11-20-마찰보고-박빌드.md 마찰 3 — 사규 10조). #112(무변동 전제 '소비' 인용)의 원천 출력,
+// #92(팁 등록 '의무')와 상이 — 본 행은 등록부 '관찰' 자동화. 파싱 실패·0건도 1행으로 드러낸다
+// (ops-env.md §4 '0건=경로 의심' 준용).
+const tipRow = fs.readFileSync(path.join(ROOT, 'org/approvals.md'), 'utf8')
+  .split(/\r?\n/).find(l => /^\|\s*14\s*\|/.test(l)) || '';
+const tipM = tipRow.match(/미병합 (\d+)팁\(([^)]*)\)/);
+const tipDecl = tipM ? parseInt(tipM[1], 10) : 0;
+// 토큰별 첫 필드만 취한다 — 팁 목록 뒤 주석(', 최장 … — main(…')이 같은 토큰에 붙는 경우(중첩 괄호로
+// [^)]* 가 닫는 괄호 앞에서 끊김) 대비. 11/26 실측: 이 가드 없으면 e02e4b5 1팁이 탈락해 7건으로 소진.
+const tips = tipM
+  ? tipM[2].split('·').map(s => s.trim().split(/[\s,]/)[0]).filter(s => /^[0-9a-f]{7,40}$/.test(s))
+  : [];
+const unmerged = tips.filter(h => {
+  try { execSync(`git merge-base --is-ancestor ${h} HEAD`, GIT_OPT); return false; }
+  catch { return true; } // 비종료(미병합)·해시 소실 모두 '미병합'으로 센다
+});
+let tipNote;
+if (!tipM) tipNote = '#14 미병합 팁 행 파싱 불가(형식 변경 의심 — ops-env.md §4 준용)';
+else if (tips.length !== tipDecl) tipNote = `#14 미병합 팁 파싱 ${tips.length}건(행 표기 ${tipDecl}팁과 불일치 — 중첩 괄호 등 형식 변경 의심 — ops-env.md §4 준용)`;
+else tipNote = cmp(`#14 미병합 팁(등록 ${tips.length} 중 미병합 ${unmerged.length})`, unmerged, 'unmergedTips');
+const appRepoNote = env.APP_REPO
+  ? 'APP_REPO 값 설정(전제 해소 — 착수 가능)'
+  : 'APP_REPO 빈값(무변경)';
+const premiseNote = `대표 전용 대기 전제 무변경 확인 — ${tipNote}, ${appRepoNote}(큐 #116)`;
 const assignByN = {}; // 상단 배정 표만 — '## ' 절(검증 대기 등) 도달 시 중단, 분할 행은 활성 행 우선
 for (const line of asg.split(/\r?\n/)) {
   if (line.startsWith('## ')) break;
@@ -314,8 +379,8 @@ else {
 // ---- 출력 (일지 묶음 행 실측 근거 양식) + 스냅숏 기록(큐 #99) ----
 fs.writeFileSync(snapFile, JSON.stringify({
   date: ktoday,
-  over, bad: badState, dueQ, pendQ,
+  over, bad: badState, dueQ, pendQ, unmergedTips: unmerged,
   // REST 실패 시 mismatch=[]는 측정 부재 — 스냅숏은 직전 실측값을 유지(다음 실행 대비 보존)
   mismatch: openList ? mismatch : (prevSnap && Array.isArray(prevSnap.mismatch) ? prevSnap.mismatch : []),
 }));
-console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${dumpNote}, ${synthNote}, ${rule3Note}, ${assignNote}, ${promiseNote}`);
+console.log(`${stamp} 실측: inbox/pending ${inboxNote}, ${commitNote}, console-input.md 붙여넣기 칸 ${consoleNote}, ${restNote}, ${waitNote}, ${badNote}, ${standupNote}, ${weeklyNote}, ${dumpNote}, ${synthNote}, ${rule3Note}, ${assignNote}, ${premiseNote}, ${promiseNote}`);
